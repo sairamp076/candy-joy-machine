@@ -1,10 +1,13 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -35,19 +38,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +92,80 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', sans-serif;
   }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* Custom glass effect */
+.glass-effect {
+  @apply bg-white bg-opacity-10 backdrop-blur-lg border border-white border-opacity-20 shadow-glass;
+}
+
+/* Candy machine display window */
+.display-window {
+  @apply bg-candy-machine-display backdrop-blur-md border border-white border-opacity-30 shadow-inner-shadow;
+  backdrop-filter: blur(8px);
+}
+
+/* Candy tray */
+.collector-tray {
+  @apply bg-candy-machine-tray backdrop-blur-sm border border-white border-opacity-20 shadow-inner-shadow;
+  backdrop-filter: blur(4px);
+}
+
+/* Candy types */
+.candy {
+  @apply shadow-candy-shadow transition-all duration-300 cursor-pointer;
+}
+
+.candy-fivestar {
+  @apply bg-candy-fivestar;
+}
+
+.candy-milkybar {
+  @apply bg-candy-milkybar;
+}
+
+.candy-dairymilk {
+  @apply bg-candy-dairymilk;
+}
+
+.candy-eclairs {
+  @apply bg-candy-eclairs;
+}
+
+/* Button styles */
+.machine-button {
+  @apply relative flex items-center justify-center px-6 py-2 font-medium text-gray-700 rounded-md shadow-md 
+         bg-button-gradient bg-[length:200%_100%] hover:shadow-lg transition-all duration-300 
+         before:content-[''] before:absolute before:inset-0 before:bg-shine-effect before:bg-[length:200%_100%] 
+         before:animate-shine before:opacity-0 hover:before:opacity-100 before:rounded-md;
+}
+
+.machine-button:active {
+  @apply transform scale-95 shadow-sm;
+}
+
+.pressed {
+  @apply animate-button-press;
+}
+
+/* Score pill */
+.score-pill {
+  @apply px-4 py-1 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-md;
+}
+
+/* History card */
+.history-card {
+  @apply p-4 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg;
+}
+
+/* Candy container */
+.candy-container {
+  @apply relative overflow-hidden rounded-lg;
 }
