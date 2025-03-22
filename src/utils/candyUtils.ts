@@ -7,7 +7,7 @@ export interface Candy {
   x: number;
   y: number;
   rotation: number;
-  isEaten: boolean;
+  isEaten?: boolean;
 }
 
 export interface HistoryItem {
@@ -26,29 +26,28 @@ export const CANDY_DETAILS = {
 };
 
 /**
+ * Creates a new candy object with random position within the bounds
+ */
+export const createCandy = (
+  type?: CandyType,
+  maxX: number = 280,
+  maxY: number = 50
+): Candy => {
+  return {
+    id: Math.random().toString(36).substring(2, 9),
+    type: type || getRandomCandyType(),
+    x: Math.max(20, Math.min(maxX - 40, Math.random() * maxX)),
+    y: Math.max(20, Math.min(maxY - 40, Math.random() * maxY)),
+    rotation: Math.random() * 360
+  };
+};
+
+/**
  * Generates a random candy type
  */
 export const getRandomCandyType = (): CandyType => {
   const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs'];
   return candyTypes[Math.floor(Math.random() * candyTypes.length)];
-};
-
-/**
- * Creates a new candy object with random position within the bounds
- */
-export const createCandy = (
-  maxX: number = 280,
-  maxY: number = 50,
-  initialY: number = -50
-): Candy => {
-  return {
-    id: Math.random().toString(36).substring(2, 9),
-    type: getRandomCandyType(),
-    x: Math.random() * maxX,
-    y: initialY,
-    rotation: Math.random() * 360,
-    isEaten: false
-  };
 };
 
 /**
@@ -67,8 +66,9 @@ export const getCandyCountForScore = (score: number): number => {
 /**
  * Generates an array of candy objects
  */
-export const generateCandies = (count: number, maxX: number, maxY: number): Candy[] => {
-  return Array.from({ length: count }, () => createCandy(maxX, maxY));
+export const generateCandies = (count: number, type?: CandyType | string, maxX?: number, maxY?: number): Candy[] => {
+  const candyType = type as CandyType || undefined;
+  return Array.from({ length: count }, () => createCandy(candyType, maxX, maxY));
 };
 
 /**

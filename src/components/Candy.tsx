@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Candy as CandyType, playSound } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
@@ -8,33 +8,22 @@ interface CandyProps {
   candy: CandyType;
   onEat: (id: string) => void;
   isNew?: boolean;
+  isDisplayOnly?: boolean;
   containerWidth: number;
   containerHeight: number;
 }
 
-const Candy = ({ candy, onEat, isNew = false, containerWidth, containerHeight }: CandyProps) => {
-  const [position, setPosition] = useState({ x: candy.x, y: candy.y });
-  const [rotation, setRotation] = useState(candy.rotation);
-  const [isDragging, setIsDragging] = useState(false);
-  const candyRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isNew) {
-      // Animate entry
-      const finalY = Math.min(containerHeight - 40, containerHeight * 0.6 + Math.random() * (containerHeight * 0.3));
-      
-      // Animate the candy dropping
-      const dropAnimation = setTimeout(() => {
-        setPosition({ x: candy.x, y: finalY });
-        setRotation(rotation + (Math.random() * 360 - 180));
-      }, 100);
-      
-      return () => clearTimeout(dropAnimation);
-    }
-  }, [isNew, containerHeight, candy.x, rotation]);
+const Candy = ({ 
+  candy, 
+  onEat, 
+  isNew = false, 
+  isDisplayOnly = false, 
+  containerWidth, 
+  containerHeight 
+}: CandyProps) => {
   
   const handleEat = () => {
-    if (!candy.isEaten && !isDragging) {
+    if (!isDisplayOnly) {
       playSound('eat');
       onEat(candy.id);
     }
@@ -89,7 +78,6 @@ const Candy = ({ candy, onEat, isNew = false, containerWidth, containerHeight }:
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper relative">
-              {/* This resembles the Eclairs candy from the provided image */}
               <div className="w-16 h-6 bg-amber-400 rounded-full shadow-lg relative flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-300 to-amber-500 opacity-80"></div>
                 
@@ -115,43 +103,47 @@ const Candy = ({ candy, onEat, isNew = false, containerWidth, containerHeight }:
     }
   };
 
+  if (isDisplayOnly) {
+    // Simple static display for candy in display window
+    return (
+      <div 
+        className={cn(
+          "w-16 h-8 flex items-center justify-center cursor-default",
+          isDisplayOnly ? "scale-75" : ""
+        )}
+        style={{ 
+          position: 'relative',
+          transform: `rotate(${candy.rotation}deg)`
+        }}
+      >
+        {getCandyShape()}
+      </div>
+    );
+  }
+
+  // Collectable/interactive candy in the tray
   return (
     <motion.div
-      ref={candyRef}
-      initial={{ opacity: isNew ? 0 : 1 }}
+      initial={{ opacity: 1 }}
       animate={{ 
-        opacity: 1,
-        x: position.x, 
-        y: position.y,
-        rotate: rotation,
-        scale: isDragging ? 1.1 : 1
+        x: candy.x, 
+        y: candy.y,
+        rotate: candy.rotation,
       }}
       transition={{ 
         type: 'spring',
         stiffness: 100,
         damping: 15,
-        opacity: { duration: 0.3 }
       }}
-      whileTap={{ scale: 0.9 }}
-      drag
-      dragConstraints={{
-        top: 0,
-        left: 0,
-        right: containerWidth - 40,
-        bottom: containerHeight - 40
-      }}
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={() => setIsDragging(false)}
       onClick={handleEat}
       className={cn(
         "absolute w-16 h-8 flex items-center justify-center cursor-pointer",
-        candy.isEaten && "opacity-0 pointer-events-none",
-        isNew && "z-10"
       )}
       style={{ 
-        x: position.x, 
-        y: position.y,
-        rotate: rotation
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        transform: `translateX(${candy.x}px) translateY(${candy.y}px) rotate(${candy.rotation}deg)`
       }}
     >
       {getCandyShape()}

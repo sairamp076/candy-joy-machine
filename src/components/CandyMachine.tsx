@@ -16,12 +16,17 @@ import {
 import { cn } from '@/lib/utils';
 
 const CandyMachine = () => {
-  const [candies, setCandies] = useState<CandyType[]>([]);
+  const [displayCandies, setDisplayCandies] = useState<{[key in CandyType]: CandyType[]}>({
+    fivestar: [],
+    milkybar: [],
+    dairymilk: [],
+    eclairs: []
+  });
+  const [collectedCandies, setCollectedCandies] = useState<CandyType[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [score, setScore] = useState<number>(0);
   const [isDispensing, setIsDispensing] = useState<boolean>(false);
-  const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 });
-
+  
   // Refs for measuring container dimensions
   const displayWindowRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
@@ -29,26 +34,17 @@ const CandyMachine = () => {
   // Input ref for score
   const scoreInputRef = useRef<HTMLInputElement>(null);
 
-  // Update the container dimensions
+  // Initialize machine with candies
   useEffect(() => {
-    const updateDimensions = () => {
-      if (displayWindowRef.current) {
-        setWindowDimensions({
-          width: displayWindowRef.current.offsetWidth,
-          height: displayWindowRef.current.offsetHeight
-        });
-      }
+    // Generate display candies for each candy type compartment
+    const newDisplayCandies = {
+      fivestar: generateCandies(6, 'fivestar'),
+      milkybar: generateCandies(6, 'milkybar'),
+      dairymilk: generateCandies(6, 'dairymilk'),
+      eclairs: generateCandies(6, 'eclairs')
     };
-
-    updateDimensions();
     
-    // Add resize listener
-    window.addEventListener('resize', updateDimensions);
-    
-    // Initial candies for display window
-    setCandies(generateCandies(8, windowDimensions.width, windowDimensions.height));
-    
-    return () => window.removeEventListener('resize', updateDimensions);
+    setDisplayCandies(newDisplayCandies);
   }, []);
 
   // Handle single candy dispensing
@@ -58,13 +54,18 @@ const CandyMachine = () => {
     setIsDispensing(true);
     playSound('button');
     
+    // Get a random candy type
+    const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs'];
+    const randomType = candyTypes[Math.floor(Math.random() * candyTypes.length)];
+    
+    // Create a new candy in the collection tray
     setTimeout(() => {
-      const newCandy = createCandy(
-        trayRef.current?.offsetWidth || 300, 
-        50
-      );
+      const trayWidth = trayRef.current?.offsetWidth || 300;
+      const trayHeight = trayRef.current?.offsetHeight || 120;
       
-      setCandies(prev => [...prev, newCandy]);
+      const newCandy = createCandy(randomType, trayWidth, trayHeight / 2);
+      
+      setCollectedCandies(prev => [...prev, newCandy]);
       playSound('drop');
       
       setIsDispensing(false);
@@ -83,6 +84,11 @@ const CandyMachine = () => {
     
     // Determine how many candies to drop based on score
     const candyCount = getCandyCountForScore(userScore);
+    const trayWidth = trayRef.current?.offsetWidth || 300;
+    const trayHeight = trayRef.current?.offsetHeight || 120;
+    
+    // Add the score from the input to the total score
+    setScore(prevScore => prevScore + userScore);
     
     // Stagger the candy drops
     let droppedCount = 0;
@@ -94,12 +100,16 @@ const CandyMachine = () => {
         return;
       }
       
+      const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs'];
+      const randomType = candyTypes[Math.floor(Math.random() * candyTypes.length)];
+      
       const newCandy = createCandy(
-        trayRef.current?.offsetWidth || 300, 
-        50
+        randomType,
+        trayWidth, 
+        trayHeight / 2
       );
       
-      setCandies(prev => [...prev, newCandy]);
+      setCollectedCandies(prev => [...prev, newCandy]);
       playSound('drop');
       
       droppedCount++;
@@ -108,14 +118,8 @@ const CandyMachine = () => {
 
   // Handle eating a candy
   const handleEatCandy = (id: string) => {
-    setCandies(prev => 
-      prev.map(candy => 
-        candy.id === id ? { ...candy, isEaten: true } : candy
-      )
-    );
-    
     // Find the eaten candy
-    const eatenCandy = candies.find(candy => candy.id === id);
+    const eatenCandy = collectedCandies.find(candy => candy.id === id);
     
     if (eatenCandy) {
       // Calculate score based on candy type
@@ -131,13 +135,8 @@ const CandyMachine = () => {
       
       setHistory(prev => [historyItem, ...prev]);
       
-      // Update total score
-      setScore(prev => prev + candyScore);
-      
-      // Remove eaten candy after animation
-      setTimeout(() => {
-        setCandies(prev => prev.filter(candy => candy.id !== id));
-      }, 500);
+      // Remove eaten candy
+      setCollectedCandies(prev => prev.filter(candy => candy.id !== id));
     }
   };
 
@@ -156,39 +155,97 @@ const CandyMachine = () => {
           <p className="text-sm text-center text-gray-100">Premium Candy Vending</p>
         </div>
         
-        {/* Display window with glass effect */}
-        <div className="relative p-6 bg-gradient-to-b from-gray-200 to-gray-300">
+        {/* 3D Machine body with perspective */}
+        <div className="relative p-6 bg-gradient-to-b from-gray-200 to-gray-300 perspective">
           {/* Product display window */}
           <div 
             ref={displayWindowRef}
-            className="display-window relative h-60 rounded-lg mb-6 overflow-hidden border-8 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+            className="display-window relative h-72 rounded-lg mb-6 overflow-hidden border-8 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
           >
             {/* Glass reflection effect */}
             <div className="absolute top-0 left-0 right-0 h-10 bg-white opacity-20 transform skew-y-3"></div>
             
-            {/* Display some candies for visual effect */}
-            {candies.filter(candy => !candy.isEaten).slice(0, 8).map(candy => (
-              <Candy 
-                key={candy.id}
-                candy={candy}
-                onEat={() => {}} // Cannot eat candies in display
-                containerWidth={windowDimensions.width}
-                containerHeight={windowDimensions.height}
-              />
-            ))}
-            
-            {/* Product selection labels */}
-            <div className="absolute left-3 top-3 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
-              A1: 5 Star
-            </div>
-            <div className="absolute left-3 top-12 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
-              A2: Milkybar
-            </div>
-            <div className="absolute left-3 top-21 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
-              A3: Dairy Milk
-            </div>
-            <div className="absolute left-3 top-30 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
-              A4: Eclairs
+            {/* Candy compartments grid */}
+            <div className="grid grid-cols-2 gap-2 p-3 h-full">
+              {/* 5 Star compartment */}
+              <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
+                  A1: 5 Star
+                </div>
+                <div className="flex flex-wrap justify-center items-center h-full">
+                  {displayCandies.fivestar.map((candy, index) => (
+                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                      <Candy 
+                        candy={candy}
+                        onEat={() => {}} // Cannot eat display candies
+                        isDisplayOnly={true}
+                        containerWidth={100}
+                        containerHeight={60}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Milkybar compartment */}
+              <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
+                  A2: Milkybar
+                </div>
+                <div className="flex flex-wrap justify-center items-center h-full">
+                  {displayCandies.milkybar.map((candy, index) => (
+                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                      <Candy 
+                        candy={candy}
+                        onEat={() => {}} // Cannot eat display candies
+                        isDisplayOnly={true}
+                        containerWidth={100}
+                        containerHeight={60}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Dairy Milk compartment */}
+              <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
+                  A3: Dairy Milk
+                </div>
+                <div className="flex flex-wrap justify-center items-center h-full">
+                  {displayCandies.dairymilk.map((candy, index) => (
+                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                      <Candy 
+                        candy={candy}
+                        onEat={() => {}} // Cannot eat display candies
+                        isDisplayOnly={true}
+                        containerWidth={100}
+                        containerHeight={60}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Eclairs compartment */}
+              <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
+                  A4: Eclairs
+                </div>
+                <div className="flex flex-wrap justify-center items-center h-full">
+                  {displayCandies.eclairs.map((candy, index) => (
+                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                      <Candy 
+                        candy={candy}
+                        onEat={() => {}} // Cannot eat display candies
+                        isDisplayOnly={true}
+                        containerWidth={100}
+                        containerHeight={60}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           
@@ -198,7 +255,7 @@ const CandyMachine = () => {
           </div>
           
           {/* Collector tray */}
-          <div className="relative mx-auto w-3/4">
+          <div className="relative mx-auto w-3/4 perspective">
             <div 
               ref={trayRef}
               className="collector-tray relative h-40 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
@@ -209,23 +266,22 @@ const CandyMachine = () => {
               </div>
               
               {/* Candies in the tray that can be eaten */}
-              <AnimatePresence>
-                {candies.filter(candy => !candy.isEaten).map(candy => (
+              <div className="relative h-full w-full">
+                {collectedCandies.map(candy => (
                   <Candy 
                     key={candy.id}
                     candy={candy}
                     onEat={handleEatCandy}
-                    isNew={true}
                     containerWidth={trayRef.current?.offsetWidth || 300}
                     containerHeight={trayRef.current?.offsetHeight || 120}
                   />
                 ))}
-              </AnimatePresence>
+              </div>
             </div>
           </div>
           
-          {/* Control panel */}
-          <div className="mt-6 bg-gradient-to-r from-gray-600 to-gray-700 p-6 rounded-lg shadow-inner border-2 border-gray-500">
+          {/* 3D Control panel with perspective */}
+          <div className="mt-6 bg-gradient-to-r from-gray-600 to-gray-700 p-6 rounded-lg shadow-inner border-2 border-gray-500 transform rotate-x-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left panel with keypad */}
               <div className="bg-gray-800 p-4 rounded-md shadow-inner">
@@ -304,6 +360,14 @@ const CandyMachine = () => {
                 <div className="text-xs text-white">COIN SLOT</div>
               </div>
             </div>
+          </div>
+
+          {/* 3D Machine depth elements */}
+          <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none">
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-400 to-transparent opacity-30"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-400 to-transparent opacity-30"></div>
+            <div className="absolute left-8 right-8 top-0 h-8 bg-gradient-to-b from-gray-400 to-transparent opacity-30"></div>
+            <div className="absolute left-8 right-8 bottom-0 h-8 bg-gradient-to-t from-gray-400 to-transparent opacity-30"></div>
           </div>
         </div>
       </motion.div>
