@@ -121,20 +121,9 @@ const Candy = ({
     );
   }
 
-  // Collectable/interactive candy in the tray
+  // Removed motion animation for candies in the collection tray
   return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ 
-        x: candy.x, 
-        y: candy.y,
-        rotate: candy.rotation,
-      }}
-      transition={{ 
-        type: 'spring',
-        stiffness: 100,
-        damping: 15,
-      }}
+    <div
       onClick={handleEat}
       className={cn(
         "absolute w-16 h-8 flex items-center justify-center cursor-pointer",
@@ -147,7 +136,7 @@ const Candy = ({
       }}
     >
       {getCandyShape()}
-    </motion.div>
+    </div>
   );
 };
 

@@ -19,10 +19,10 @@ export interface HistoryItem {
 
 // Candy names and base scores
 export const CANDY_DETAILS = {
-  fivestar: { name: '5 Star', baseScore: 15 },
-  milkybar: { name: 'Milkybar', baseScore: 10 },
-  dairymilk: { name: 'Dairy Milk', baseScore: 20 },
-  eclairs: { name: 'Eclairs', baseScore: 5 }
+  fivestar: { name: '5 Star', baseScore: 15, defaultCount: 15 },
+  milkybar: { name: 'Milkybar', baseScore: 10, defaultCount: 15 },
+  dairymilk: { name: 'Dairy Milk', baseScore: 20, defaultCount: 15 },
+  eclairs: { name: 'Eclairs', baseScore: 5, defaultCount: 15 }
 };
 
 /**
@@ -97,4 +97,22 @@ export const generateDisplayCandies = (count: number, type: CandyType): Candy[] 
     y: 10 + Math.floor(index / 3) * 20,
     rotation: (index * 15) % 360
   }));
+};
+
+/**
+ * Get a random candy of a specific type from the display
+ */
+export const getRandomCandyOfType = (type: CandyType, candies: Candy[]): Candy | null => {
+  const typeSpecificCandies = candies.filter(candy => candy.type === type);
+  if (typeSpecificCandies.length === 0) return null;
+  
+  const randomIndex = Math.floor(Math.random() * typeSpecificCandies.length);
+  return typeSpecificCandies[randomIndex];
+};
+
+/**
+ * Calculates total score from history
+ */
+export const calculateTotalScore = (history: HistoryItem[]): number => {
+  return history.reduce((total, item) => total + item.score, 0);
 };
