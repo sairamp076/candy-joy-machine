@@ -45,39 +45,68 @@ const Candy = ({ candy, onEat, isNew = false, containerWidth, containerHeight }:
     switch (candy.type) {
       case 'fivestar':
         return (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-10 h-4 bg-candy-fivestar rounded-sm shadow-md relative flex items-center justify-center">
-              <span className="text-[8px] font-bold text-amber-800">5★</span>
-              <div className="absolute inset-0 bg-gradient-to-b from-yellow-300 to-transparent opacity-50 rounded-sm"></div>
+          <div className="w-full h-full flex items-center justify-center perspective">
+            <div className="candy-wrapper w-16 h-5 relative">
+              <div className="w-16 h-5 bg-yellow-600 rounded-sm shadow-lg relative flex items-center justify-center transform-gpu">
+                <span className="text-[10px] font-bold text-yellow-900 z-10">5★</span>
+                <div className="absolute inset-0 bg-gradient-to-b from-yellow-500 to-yellow-700 rounded-sm"></div>
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-yellow-400"></div>
+              </div>
             </div>
           </div>
         );
       case 'milkybar':
         return (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-8 h-4 bg-candy-milkybar rounded-sm shadow-md relative">
-              <div className="absolute inset-0 bg-gradient-to-b from-white to-transparent opacity-40 rounded-sm"></div>
-              <div className="absolute top-1 left-1 right-1 h-[1px] bg-amber-100"></div>
+          <div className="w-full h-full flex items-center justify-center perspective">
+            <div className="candy-wrapper w-14 h-5 relative">
+              <div className="w-14 h-5 bg-amber-50 rounded-sm shadow-lg relative">
+                <div className="absolute inset-0 bg-gradient-to-b from-amber-50 to-amber-100 rounded-sm"></div>
+                <div className="absolute top-1/3 left-0 right-0 h-[1px] bg-amber-100"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-amber-800">MILKYBAR</span>
+                </div>
+              </div>
             </div>
           </div>
         );
       case 'dairymilk':
         return (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-8 h-6 bg-candy-dairymilk rounded-sm shadow-md grid grid-cols-2 grid-rows-2 gap-[1px] p-[1px]">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-candy-dairymilk border-t border-l border-amber-800 border-opacity-30"></div>
-              ))}
-              <div className="absolute inset-0 bg-gradient-to-b from-amber-700 to-transparent opacity-30 rounded-sm"></div>
+          <div className="w-full h-full flex items-center justify-center perspective">
+            <div className="candy-wrapper w-14 h-7 relative">
+              <div className="w-14 h-7 bg-purple-900 rounded-sm shadow-lg grid grid-cols-2 grid-rows-2 gap-[1px] p-[1px]">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-purple-800 border-t border-l border-purple-700 border-opacity-30"></div>
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-b from-purple-800 to-purple-900 opacity-70 rounded-sm"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-purple-100">DAIRY MILK</span>
+                </div>
+              </div>
             </div>
           </div>
         );
       case 'eclairs':
         return (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-5 h-5 bg-candy-eclairs rounded-full shadow-md relative">
-              <div className="absolute inset-0 bg-gradient-to-b from-yellow-600 to-transparent opacity-40 rounded-full"></div>
-              <div className="absolute inset-1 rounded-full border border-amber-800 border-opacity-30"></div>
+          <div className="w-full h-full flex items-center justify-center perspective">
+            <div className="candy-wrapper relative">
+              {/* This resembles the Eclairs candy from the provided image */}
+              <div className="w-16 h-6 bg-amber-400 rounded-full shadow-lg relative flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-amber-300 to-amber-500 opacity-80"></div>
+                
+                {/* Candy wrapper twist ends */}
+                <div className="absolute -left-2 w-4 h-6 bg-indigo-600 rounded-r-full"></div>
+                <div className="absolute -right-2 w-4 h-6 bg-indigo-600 rounded-l-full"></div>
+                
+                {/* Candy label */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-indigo-900 transform -rotate-3">Eclairs</span>
+                </div>
+                
+                {/* Circular patterns on wrapper */}
+                <div className="absolute top-1 left-3 w-2 h-2 border border-indigo-400 rounded-full"></div>
+                <div className="absolute bottom-1 right-5 w-1.5 h-1.5 border border-indigo-400 rounded-full"></div>
+                <div className="absolute bottom-0.5 left-5 w-1 h-1 border border-indigo-400 rounded-full"></div>
+              </div>
             </div>
           </div>
         );
@@ -115,7 +144,7 @@ const Candy = ({ candy, onEat, isNew = false, containerWidth, containerHeight }:
       onDragEnd={() => setIsDragging(false)}
       onClick={handleEat}
       className={cn(
-        "absolute w-10 h-10 flex items-center justify-center cursor-pointer",
+        "absolute w-16 h-8 flex items-center justify-center cursor-pointer",
         candy.isEaten && "opacity-0 pointer-events-none",
         isNew && "z-10"
       )}
