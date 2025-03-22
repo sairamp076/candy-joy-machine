@@ -10,13 +10,17 @@ import {
   createCandy, 
   getCandyCountForScore, 
   generateCandies, 
+  generateDisplayCandies,
   playSound, 
-  CANDY_DETAILS
+  CANDY_DETAILS,
+  createEclairsCandy
 } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
+import { Input } from './ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 const CandyMachine = () => {
-  const [displayCandies, setDisplayCandies] = useState<{[key in CandyType]: CandyType[]}>({
+  const [displayCandies, setDisplayCandies] = useState<{[key: string]: CandyType[]}>({
     fivestar: [],
     milkybar: [],
     dairymilk: [],
@@ -26,6 +30,7 @@ const CandyMachine = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [score, setScore] = useState<number>(0);
   const [isDispensing, setIsDispensing] = useState<boolean>(false);
+  const [refillCount, setRefillCount] = useState<number>(5);
   
   // Refs for measuring container dimensions
   const displayWindowRef = useRef<HTMLDivElement>(null);
@@ -38,38 +43,88 @@ const CandyMachine = () => {
   useEffect(() => {
     // Generate display candies for each candy type compartment
     const newDisplayCandies = {
-      fivestar: generateCandies(6, 'fivestar'),
-      milkybar: generateCandies(6, 'milkybar'),
-      dairymilk: generateCandies(6, 'dairymilk'),
-      eclairs: generateCandies(6, 'eclairs')
+      fivestar: generateDisplayCandies(6, 'fivestar'),
+      milkybar: generateDisplayCandies(6, 'milkybar'),
+      dairymilk: generateDisplayCandies(6, 'dairymilk'),
+      eclairs: generateDisplayCandies(6, 'eclairs')
     };
     
     setDisplayCandies(newDisplayCandies);
   }, []);
 
-  // Handle single candy dispensing
+  // Handle single candy dispensing (only Eclairs)
   const handleDispense = () => {
     if (isDispensing) return;
     
     setIsDispensing(true);
     playSound('button');
     
-    // Get a random candy type
-    const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs'];
-    const randomType = candyTypes[Math.floor(Math.random() * candyTypes.length)];
-    
-    // Create a new candy in the collection tray
+    // Create a new Eclairs candy in the collection tray
     setTimeout(() => {
       const trayWidth = trayRef.current?.offsetWidth || 300;
       const trayHeight = trayRef.current?.offsetHeight || 120;
       
-      const newCandy = createCandy(randomType, trayWidth, trayHeight / 2);
+      const newCandy = createEclairsCandy(trayWidth, trayHeight / 2);
       
       setCollectedCandies(prev => [...prev, newCandy]);
       playSound('drop');
       
       setIsDispensing(false);
     }, 300);
+  };
+
+  // Handle refill for all compartments
+  const handleRefillAll = () => {
+    if (isDispensing) return;
+    
+    playSound('button');
+    
+    // Refill all compartments with default count
+    const newDisplayCandies = {
+      fivestar: generateDisplayCandies(6, 'fivestar'),
+      milkybar: generateDisplayCandies(6, 'milkybar'),
+      dairymilk: generateDisplayCandies(6, 'dairymilk'),
+      eclairs: generateDisplayCandies(6, 'eclairs')
+    };
+    
+    setDisplayCandies(newDisplayCandies);
+  };
+
+  // Handle refill for a specific compartment
+  const handleRefillCompartment = (type: string) => {
+    if (isDispensing) return;
+    
+    playSound('button');
+    
+    // Generate new candies for the specific compartment
+    setDisplayCandies(prev => ({
+      ...prev,
+      [type]: generateDisplayCandies(refillCount, type as any)
+    }));
+  };
+
+  // Handle collecting all candies
+  const handleCollectAll = () => {
+    if (collectedCandies.length === 0) return;
+    
+    // Add all collected candies to history
+    const now = new Date();
+    
+    collectedCandies.forEach(candy => {
+      const candyScore = CANDY_DETAILS[candy.type].baseScore;
+      
+      const historyItem: HistoryItem = {
+        id: candy.id,
+        type: candy.type,
+        timestamp: now,
+        score: candyScore
+      };
+      
+      setHistory(prev => [historyItem, ...prev]);
+    });
+    
+    // Clear collection tray
+    setCollectedCandies([]);
   };
 
   // Handle multiple candy dispensing based on score
@@ -100,14 +155,7 @@ const CandyMachine = () => {
         return;
       }
       
-      const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs'];
-      const randomType = candyTypes[Math.floor(Math.random() * candyTypes.length)];
-      
-      const newCandy = createCandy(
-        randomType,
-        trayWidth, 
-        trayHeight / 2
-      );
+      const newCandy = createCandy(undefined, trayWidth, trayHeight / 2);
       
       setCollectedCandies(prev => [...prev, newCandy]);
       playSound('drop');
@@ -142,12 +190,16 @@ const CandyMachine = () => {
 
   return (
     <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-6">
-      {/* Candy Machine */}
+      {/* 3D Candy Machine */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="flex-1 bg-gradient-to-b from-gray-300 to-gray-400 rounded-xl shadow-2xl overflow-hidden border-4 border-gray-500"
+        className="flex-1 bg-gradient-to-b from-gray-300 to-gray-400 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-500 relative"
+        style={{
+          transform: "perspective(1000px) rotateX(5deg)",
+          transformStyle: "preserve-3d"
+        }}
       >
         {/* Machine header with brand */}
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 rounded-t-md border-b-4 border-gray-600">
@@ -155,15 +207,19 @@ const CandyMachine = () => {
           <p className="text-sm text-center text-gray-100">Premium Candy Vending</p>
         </div>
         
-        {/* 3D Machine body with perspective */}
-        <div className="relative p-6 bg-gradient-to-b from-gray-200 to-gray-300 perspective">
+        {/* Machine body with cylindrical shape */}
+        <div className="relative p-6 bg-gradient-to-b from-gray-200 to-gray-300">
           {/* Product display window */}
           <div 
             ref={displayWindowRef}
             className="display-window relative h-72 rounded-lg mb-6 overflow-hidden border-8 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+            style={{
+              borderRadius: "12px 12px 30px 30px",
+              boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
+            }}
           >
             {/* Glass reflection effect */}
-            <div className="absolute top-0 left-0 right-0 h-10 bg-white opacity-20 transform skew-y-3"></div>
+            <div className="absolute top-0 left-0 right-0 h-12 bg-white opacity-20 transform skew-y-3"></div>
             
             {/* Candy compartments grid */}
             <div className="grid grid-cols-2 gap-2 p-3 h-full">
@@ -174,10 +230,10 @@ const CandyMachine = () => {
                 </div>
                 <div className="flex flex-wrap justify-center items-center h-full">
                   {displayCandies.fivestar.map((candy, index) => (
-                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                    <div key={`display-fivestar-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                       <Candy 
                         candy={candy}
-                        onEat={() => {}} // Cannot eat display candies
+                        onEat={() => {}} 
                         isDisplayOnly={true}
                         containerWidth={100}
                         containerHeight={60}
@@ -185,6 +241,34 @@ const CandyMachine = () => {
                     </div>
                   ))}
                 </div>
+                {/* Refill button */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors">
+                      Refill
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Refill 5 Star Compartment</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Enter the number of candies to add:
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max="20" 
+                          className="mt-2" 
+                          value={refillCount}
+                          onChange={(e) => setRefillCount(Number(e.target.value))}
+                        />
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleRefillCompartment('fivestar')}>Refill</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
               
               {/* Milkybar compartment */}
@@ -194,10 +278,10 @@ const CandyMachine = () => {
                 </div>
                 <div className="flex flex-wrap justify-center items-center h-full">
                   {displayCandies.milkybar.map((candy, index) => (
-                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                    <div key={`display-milkybar-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                       <Candy 
                         candy={candy}
-                        onEat={() => {}} // Cannot eat display candies
+                        onEat={() => {}}
                         isDisplayOnly={true}
                         containerWidth={100}
                         containerHeight={60}
@@ -205,6 +289,34 @@ const CandyMachine = () => {
                     </div>
                   ))}
                 </div>
+                {/* Refill button */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors">
+                      Refill
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Refill Milkybar Compartment</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Enter the number of candies to add:
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max="20" 
+                          className="mt-2" 
+                          value={refillCount}
+                          onChange={(e) => setRefillCount(Number(e.target.value))}
+                        />
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleRefillCompartment('milkybar')}>Refill</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
               
               {/* Dairy Milk compartment */}
@@ -214,10 +326,10 @@ const CandyMachine = () => {
                 </div>
                 <div className="flex flex-wrap justify-center items-center h-full">
                   {displayCandies.dairymilk.map((candy, index) => (
-                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                    <div key={`display-dairymilk-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                       <Candy 
                         candy={candy}
-                        onEat={() => {}} // Cannot eat display candies
+                        onEat={() => {}}
                         isDisplayOnly={true}
                         containerWidth={100}
                         containerHeight={60}
@@ -225,6 +337,34 @@ const CandyMachine = () => {
                     </div>
                   ))}
                 </div>
+                {/* Refill button */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors">
+                      Refill
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Refill Dairy Milk Compartment</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Enter the number of candies to add:
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max="20" 
+                          className="mt-2" 
+                          value={refillCount}
+                          onChange={(e) => setRefillCount(Number(e.target.value))}
+                        />
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleRefillCompartment('dairymilk')}>Refill</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
               
               {/* Eclairs compartment */}
@@ -234,10 +374,10 @@ const CandyMachine = () => {
                 </div>
                 <div className="flex flex-wrap justify-center items-center h-full">
                   {displayCandies.eclairs.map((candy, index) => (
-                    <div key={`display-${candy.id}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                    <div key={`display-eclairs-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                       <Candy 
                         candy={candy}
-                        onEat={() => {}} // Cannot eat display candies
+                        onEat={() => {}}
                         isDisplayOnly={true}
                         containerWidth={100}
                         containerHeight={60}
@@ -245,6 +385,34 @@ const CandyMachine = () => {
                     </div>
                   ))}
                 </div>
+                {/* Refill button */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors">
+                      Refill
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Refill Eclairs Compartment</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Enter the number of candies to add:
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max="20" 
+                          className="mt-2" 
+                          value={refillCount}
+                          onChange={(e) => setRefillCount(Number(e.target.value))}
+                        />
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleRefillCompartment('eclairs')}>Refill</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
@@ -259,11 +427,25 @@ const CandyMachine = () => {
             <div 
               ref={trayRef}
               className="collector-tray relative h-40 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
+              style={{
+                borderBottomRightRadius: "30px",
+                borderBottomLeftRadius: "30px",
+                boxShadow: "inset 0 5px 15px rgba(0,0,0,0.3)"
+              }}
             >
               {/* Tray label */}
               <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
                 Collection Tray
               </div>
+              
+              {/* Collect All button */}
+              <button 
+                onClick={handleCollectAll}
+                className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors"
+                disabled={collectedCandies.length === 0}
+              >
+                Collect All
+              </button>
               
               {/* Candies in the tray that can be eaten */}
               <div className="relative h-full w-full">
@@ -283,7 +465,7 @@ const CandyMachine = () => {
           {/* 3D Control panel with perspective */}
           <div className="mt-6 bg-gradient-to-r from-gray-600 to-gray-700 p-6 rounded-lg shadow-inner border-2 border-gray-500 transform rotate-x-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left panel with keypad */}
+              {/* Left panel with operation controls */}
               <div className="bg-gray-800 p-4 rounded-md shadow-inner">
                 <div className="mb-3 flex justify-between items-center">
                   <div className="text-sm text-white font-semibold">OPERATION</div>
@@ -295,21 +477,20 @@ const CandyMachine = () => {
                   disabled={isDispensing}
                   variant="secondary"
                   size="large"
-                  className="w-full mb-4 bg-gradient-to-r from-gray-300 to-gray-400 border-2 border-gray-500 text-gray-900 font-bold"
+                  className="w-full mb-3 bg-gradient-to-r from-gray-300 to-gray-400 border-2 border-gray-500 text-gray-900 font-bold"
                 >
-                  Dispense Candy
+                  Dispense Eclairs
                 </Button>
                 
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                    <div 
-                      key={num} 
-                      className="bg-gray-700 text-white h-8 rounded flex items-center justify-center cursor-pointer hover:bg-gray-600 text-sm font-semibold shadow-md"
-                    >
-                      {num}
-                    </div>
-                  ))}
-                </div>
+                <Button
+                  onClick={handleRefillAll}
+                  disabled={isDispensing}
+                  variant="secondary"
+                  size="large"
+                  className="w-full bg-gradient-to-r from-blue-300 to-blue-400 border-2 border-blue-500 text-gray-900 font-bold"
+                >
+                  Refill All
+                </Button>
               </div>
               
               {/* Right panel with score input */}
@@ -370,6 +551,10 @@ const CandyMachine = () => {
             <div className="absolute left-8 right-8 bottom-0 h-8 bg-gradient-to-t from-gray-400 to-transparent opacity-30"></div>
           </div>
         </div>
+        
+        {/* Machine sides to create 3D cylindrical effect */}
+        <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-gray-500 to-gray-300 opacity-80"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-gray-500 to-gray-300 opacity-80"></div>
       </motion.div>
       
       {/* History and Score Panel */}

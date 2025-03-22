@@ -36,7 +36,7 @@ const Candy = ({
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper w-16 h-5 relative">
-              <div className="w-16 h-5 bg-yellow-600 rounded-sm shadow-lg relative flex items-center justify-center transform-gpu">
+              <div className="w-16 h-5 bg-yellow-600 rounded-sm shadow-lg relative flex items-center justify-center transform-gpu border-2 border-yellow-900">
                 <span className="text-[10px] font-bold text-yellow-900 z-10">5★</span>
                 <div className="absolute inset-0 bg-gradient-to-b from-yellow-500 to-yellow-700 rounded-sm"></div>
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-yellow-400"></div>
@@ -48,7 +48,7 @@ const Candy = ({
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper w-14 h-5 relative">
-              <div className="w-14 h-5 bg-amber-50 rounded-sm shadow-lg relative">
+              <div className="w-14 h-5 bg-amber-50 rounded-sm shadow-lg relative border-2 border-amber-200">
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-50 to-amber-100 rounded-sm"></div>
                 <div className="absolute top-1/3 left-0 right-0 h-[1px] bg-amber-100"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -62,7 +62,7 @@ const Candy = ({
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper w-14 h-7 relative">
-              <div className="w-14 h-7 bg-purple-900 rounded-sm shadow-lg grid grid-cols-2 grid-rows-2 gap-[1px] p-[1px]">
+              <div className="w-14 h-7 bg-purple-900 rounded-sm shadow-lg grid grid-cols-2 grid-rows-2 gap-[1px] p-[1px] border-2 border-purple-950">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="bg-purple-800 border-t border-l border-purple-700 border-opacity-30"></div>
                 ))}
@@ -78,12 +78,12 @@ const Candy = ({
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper relative">
-              <div className="w-16 h-6 bg-amber-400 rounded-full shadow-lg relative flex items-center justify-center overflow-hidden">
+              <div className="w-16 h-6 bg-amber-400 rounded-full shadow-lg relative flex items-center justify-center overflow-hidden border-2 border-amber-800">
                 <div className="absolute inset-0 bg-gradient-to-b from-amber-300 to-amber-500 opacity-80"></div>
                 
                 {/* Candy wrapper twist ends */}
-                <div className="absolute -left-2 w-4 h-6 bg-indigo-600 rounded-r-full"></div>
-                <div className="absolute -right-2 w-4 h-6 bg-indigo-600 rounded-l-full"></div>
+                <div className="absolute -left-2 w-4 h-6 bg-indigo-600 rounded-r-full border-r border-indigo-900"></div>
+                <div className="absolute -right-2 w-4 h-6 bg-indigo-600 rounded-l-full border-l border-indigo-900"></div>
                 
                 {/* Candy label */}
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -91,9 +91,9 @@ const Candy = ({
                 </div>
                 
                 {/* Circular patterns on wrapper */}
-                <div className="absolute top-1 left-3 w-2 h-2 border border-indigo-400 rounded-full"></div>
-                <div className="absolute bottom-1 right-5 w-1.5 h-1.5 border border-indigo-400 rounded-full"></div>
-                <div className="absolute bottom-0.5 left-5 w-1 h-1 border border-indigo-400 rounded-full"></div>
+                <div className="absolute top-1 left-3 w-2 h-2 border border-indigo-900 rounded-full"></div>
+                <div className="absolute bottom-1 right-5 w-1.5 h-1.5 border border-indigo-900 rounded-full"></div>
+                <div className="absolute bottom-0.5 left-5 w-1 h-1 border border-indigo-900 rounded-full"></div>
               </div>
             </div>
           </div>

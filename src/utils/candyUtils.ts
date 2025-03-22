@@ -67,7 +67,7 @@ export const getCandyCountForScore = (score: number): number => {
  * Generates an array of candy objects
  */
 export const generateCandies = (count: number, type?: CandyType | string, maxX?: number, maxY?: number): Candy[] => {
-  const candyType = type as CandyType || undefined;
+  const candyType = typeof type === 'string' ? type as CandyType : undefined;
   return Array.from({ length: count }, () => createCandy(candyType, maxX, maxY));
 };
 
@@ -77,4 +77,24 @@ export const generateCandies = (count: number, type?: CandyType | string, maxX?:
 export const playSound = (sound: 'button' | 'drop' | 'eat'): void => {
   // In a real implementation, this would play actual sounds
   console.log(`Playing ${sound} sound`);
+};
+
+/**
+ * Creates a specific candy (Eclairs) for dispense operation
+ */
+export const createEclairsCandy = (maxX: number = 280, maxY: number = 50): Candy => {
+  return createCandy('eclairs', maxX, maxY);
+};
+
+/**
+ * Generate display candies for a specific compartment
+ */
+export const generateDisplayCandies = (count: number, type: CandyType): Candy[] => {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `display-${type}-${index}`,
+    type: type,
+    x: 10 + (index % 3) * 25,
+    y: 10 + Math.floor(index / 3) * 20,
+    rotation: (index * 15) % 360
+  }));
 };
