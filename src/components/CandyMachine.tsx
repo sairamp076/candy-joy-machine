@@ -757,33 +757,32 @@ const CandyMachine = () => {
               </div>
             </div>
             
-            <div className="relative mx-auto w-full h-60 bg-gray-900 rounded-md border-8 border-gray-800 overflow-hidden shadow-inner">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
-                <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
-                <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
-              </div>
-              
-              <div className="absolute inset-8 bg-white rounded-sm shadow-inner"></div>
-              
-              <div className="absolute inset-8 overflow-hidden rounded-sm">
-                <iframe 
-                  src="https://lovable.dev" 
-                  title="Lovable Website"
-                  className="w-full h-full border-0 transform scale-90 origin-center" 
-                  loading="lazy"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                ></iframe>
-              </div>
-              
-              <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white to-transparent opacity-5 pointer-events-none"></div>
-              
-              <div className="absolute bottom-2 right-2 flex items-center gap-2 pointer-events-none">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-[8px] text-green-500">ONLINE</span>
-              </div>
-            </div>
+            <div className="relative mx-auto w-80 h-60 bg-gray-900 rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
+  {/* Outer Glow to Mimic LED Border */}
+  <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
+
+  {/* Inner Frame with 3D Effect */}
+  <div className="absolute inset-1 bg-black rounded-lg border-2 border-gray-600 shadow-inner"></div>
+
+  {/* Full-Screen Website within the Frame */}
+  <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
+    <iframe
+      src="https://lovable.dev"
+      title="Lovable Website"
+      className="w-full h-full border-0"
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    ></iframe>
+  </div>
+
+  {/* Bottom LED Indicator */}
+  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+    <span className="text-[10px] text-green-500">ACTIVE</span>
+  </div>
+</div>
+
+
             
             <div 
               className="display-window relative h-40 rounded-b-lg mt-4 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
