@@ -35,10 +35,27 @@ const Candy = ({
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper w-16 h-5 relative">
-              <div className="w-16 h-5 bg-yellow-600 rounded-sm shadow-lg relative flex items-center justify-center transform-gpu border-2 border-yellow-900">
-                <span className="text-[10px] font-bold text-yellow-900 z-10">5★</span>
-                <div className="absolute inset-0 bg-gradient-to-b from-yellow-500 to-yellow-700 rounded-sm"></div>
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-yellow-400"></div>
+              {/* Enhanced 5 Star design based on the image */}
+              <div className="w-16 h-5 bg-yellow-500 rounded-sm shadow-lg relative flex items-center justify-center transform-gpu border-2 border-yellow-600">
+                <div className="absolute top-0 left-0 right-0 h-full w-full bg-gradient-to-b from-yellow-400 to-yellow-500"></div>
+                <div className="absolute top-0 left-0 w-8 h-5 rounded-l-sm flex items-center justify-center">
+                  <div className="absolute top-0 left-1 w-6 h-5 rounded-l-sm overflow-hidden">
+                    <div className="absolute top-0.5 left-0 right-0 h-4 flex items-center justify-center">
+                      <span className="text-[10px] font-extrabold text-white z-10 drop-shadow-md">5</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 w-10 h-5 rounded-r-sm flex items-center justify-center">
+                  <div className="absolute top-0.5 right-1 w-6 h-4 flex items-center justify-center">
+                    <span className="text-[10px] font-extrabold text-white z-10 -skew-x-12">★★★★★</span>
+                  </div>
+                </div>
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-yellow-300"></div>
+                
+                {/* Cadbury logo */}
+                <div className="absolute -left-1 -top-1 w-4 h-4 rounded-full bg-purple-800 border border-purple-900 flex items-center justify-center z-20">
+                  <span className="text-[5px] font-bold text-white transform rotate-0">C</span>
+                </div>
               </div>
             </div>
           </div>
@@ -61,14 +78,31 @@ const Candy = ({
         return (
           <div className="w-full h-full flex items-center justify-center perspective">
             <div className="candy-wrapper w-14 h-7 relative">
-              <div className="w-14 h-7 bg-purple-900 rounded-sm shadow-lg grid grid-cols-2 grid-rows-2 gap-[1px] p-[1px] border-2 border-purple-950">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-purple-800 border-t border-l border-purple-700 border-opacity-30"></div>
-                ))}
-                <div className="absolute inset-0 bg-gradient-to-b from-purple-800 to-purple-900 opacity-70 rounded-sm"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-[8px] font-bold text-purple-100">DAIRY MILK</span>
+              {/* Enhanced Dairy Milk design based on the image */}
+              <div className="w-14 h-7 bg-purple-800 rounded-sm shadow-lg border-2 border-purple-900 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-purple-700 to-purple-900"></div>
+                
+                {/* Silk Bubbly design element */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {/* Cadbury logo */}
+                  <div className="text-[6px] font-fancy text-yellow-300 transform -skew-x-12 mt-0.5">Cadbury</div>
+                  
+                  {/* Dairy Milk text */}
+                  <div className="text-[8px] font-bold text-white mt-0.5">Dairy Milk</div>
+                  
+                  {/* Silk text */}
+                  <div className="text-[10px] italic font-bold text-yellow-300 transform -skew-x-12 -mt-0.5">Silk</div>
+                  
+                  {/* Bubbly text */}
+                  <div className="text-[8px] font-bold text-white mt-0.5">BUBBLY</div>
                 </div>
+                
+                {/* Bubble texture */}
+                <div className="absolute bottom-1 left-1 w-1 h-1 rounded-full bg-purple-500 opacity-60"></div>
+                <div className="absolute bottom-2 left-3 w-1.5 h-1.5 rounded-full bg-purple-500 opacity-60"></div>
+                <div className="absolute top-2 right-2 w-1 h-1 rounded-full bg-purple-500 opacity-60"></div>
+                <div className="absolute top-3 left-2 w-2 h-2 rounded-full bg-purple-500 opacity-60"></div>
+                <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-purple-500 opacity-60"></div>
               </div>
             </div>
           </div>

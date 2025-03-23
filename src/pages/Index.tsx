@@ -9,7 +9,7 @@ const Index = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-800 pt-2 mb-1">
           Candy Vending Machine
         </h1>
-        <p className="text-gray-600 max-w-2xl mx-auto text-center mb-2 px-4">
+        <p className="text-gray-600 max-w-2xl mx-auto text-center mb-4 px-4">
           Experience the joy of a real candy vending machine! Dispense chocolates, collect rewards based on your score, and enjoy your virtual treats.
         </p>
 

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
 import Candy from './Candy';
 import HistoryPanel from './HistoryPanel';
+import StockManagement from './StockManagement';
 import { 
   Candy as CandyType, 
   CandyType as CandyTypeEnum,
@@ -20,8 +21,36 @@ import {
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
-import { PackagePlus, Package, ShoppingCart, RefreshCw } from 'lucide-react';
+import { 
+  PackagePlus, 
+  Package, 
+  ShoppingCart, 
+  RefreshCw, 
+  Menu, 
+  Truck, 
+  User, 
+  Store,
+  Zap
+} from 'lucide-react';
 import { toast } from "sonner";
+import { 
+  Sheet, 
+  SheetClose, 
+  SheetContent, 
+  SheetDescription, 
+  SheetFooter, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Define stock management interface
+interface StockLevels {
+  vendingMachine: Record<CandyTypeEnum, number>;
+  floorManager: Record<CandyTypeEnum, number>;
+  vendor: Record<CandyTypeEnum, number>;
+}
 
 const CandyMachine = () => {
   // Updated state to track candy counts in each compartment
@@ -31,6 +60,25 @@ const CandyMachine = () => {
     dairymilk: CANDY_DETAILS.dairymilk.defaultCount,
     eclairs: CANDY_DETAILS.eclairs.defaultCount,
     ferrero: CANDY_DETAILS.ferrero.defaultCount
+  });
+  
+  // Stock management levels
+  const [stockLevels, setStockLevels] = useState<StockLevels>({
+    vendingMachine: { ...candyCounts },
+    floorManager: {
+      fivestar: 20,
+      milkybar: 20,
+      dairymilk: 20,
+      eclairs: 20,
+      ferrero: 20
+    },
+    vendor: {
+      fivestar: 50,
+      milkybar: 50,
+      dairymilk: 50,
+      eclairs: 50,
+      ferrero: 50
+    }
   });
   
   const [displayCandies, setDisplayCandies] = useState<Record<CandyTypeEnum, CandyType[]>>({
@@ -57,6 +105,11 @@ const CandyMachine = () => {
   useEffect(() => {
     // Generate display candies for each candy type compartment
     initializeCandies();
+    // Initialize stock levels
+    setStockLevels(prev => ({
+      ...prev,
+      vendingMachine: { ...candyCounts }
+    }));
   }, []);
   
   const initializeCandies = () => {
@@ -84,6 +137,15 @@ const CandyMachine = () => {
       eclairs: prev.eclairs - 1
     }));
     
+    // Update stock levels
+    setStockLevels(prev => ({
+      ...prev,
+      vendingMachine: {
+        ...prev.vendingMachine,
+        eclairs: prev.vendingMachine.eclairs - 1
+      }
+    }));
+    
     // Update display candies to reflect the reduced count
     setDisplayCandies(prev => ({
       ...prev,
@@ -108,8 +170,46 @@ const CandyMachine = () => {
   const handleRefillAll = () => {
     if (isDispensing) return;
     
+    // Check floor manager stock
+    const canRefill = Object.keys(candyCounts).every(
+      type => stockLevels.floorManager[type as CandyTypeEnum] >= (CANDY_DETAILS[type as CandyTypeEnum].defaultCount - candyCounts[type as CandyTypeEnum])
+    );
+    
+    if (!canRefill) {
+      toast.error("Floor manager doesn't have enough stock for complete refill");
+      return;
+    }
+    
     playSound('button');
     toast.success("All compartments refilled!");
+    
+    // Calculate stock needed for each type
+    const stockNeeded: Record<CandyTypeEnum, number> = {} as Record<CandyTypeEnum, number>;
+    Object.keys(candyCounts).forEach(type => {
+      const candyType = type as CandyTypeEnum;
+      stockNeeded[candyType] = CANDY_DETAILS[candyType].defaultCount - candyCounts[candyType];
+    });
+    
+    // Update floor manager stock
+    setStockLevels(prev => {
+      const newFloorManagerStock = { ...prev.floorManager };
+      Object.keys(stockNeeded).forEach(type => {
+        const candyType = type as CandyTypeEnum;
+        newFloorManagerStock[candyType] -= stockNeeded[candyType];
+      });
+      
+      return {
+        ...prev,
+        floorManager: newFloorManagerStock,
+        vendingMachine: {
+          fivestar: CANDY_DETAILS.fivestar.defaultCount,
+          milkybar: CANDY_DETAILS.milkybar.defaultCount,
+          dairymilk: CANDY_DETAILS.dairymilk.defaultCount,
+          eclairs: CANDY_DETAILS.eclairs.defaultCount,
+          ferrero: CANDY_DETAILS.ferrero.defaultCount
+        }
+      };
+    });
     
     // Reset all candy counts to default
     setCandyCounts({
@@ -136,9 +236,26 @@ const CandyMachine = () => {
   const handleRefillCompartment = (type: CandyTypeEnum) => {
     if (isDispensing) return;
     
+    const currentCount = candyCounts[type];
+    const maxCount = CANDY_DETAILS[type].defaultCount;
+    
+    // Check if already at max
+    if (currentCount >= maxCount) {
+      toast.error(`${CANDY_DETAILS[type].name} compartment is already full!`);
+      return;
+    }
+    
+    const refillAmount = Math.min(refillCount, maxCount - currentCount);
+    
+    // Check if floor manager has enough stock
+    if (stockLevels.floorManager[type] < refillAmount) {
+      toast.error(`Floor manager doesn't have enough ${CANDY_DETAILS[type].name} stock!`);
+      return;
+    }
+    
     playSound('button');
     
-    const newCount = Math.min(candyCounts[type] + refillCount, CANDY_DETAILS[type].defaultCount);
+    const newCount = currentCount + refillAmount;
     
     // Update the count for the specific compartment
     setCandyCounts(prev => ({
@@ -146,16 +263,48 @@ const CandyMachine = () => {
       [type]: newCount
     }));
     
+    // Update stock levels
+    setStockLevels(prev => ({
+      ...prev,
+      floorManager: {
+        ...prev.floorManager,
+        [type]: prev.floorManager[type] - refillAmount
+      },
+      vendingMachine: {
+        ...prev.vendingMachine,
+        [type]: newCount
+      }
+    }));
+    
     toast.success(`${CANDY_DETAILS[type].name} compartment refilled to ${newCount}!`);
     
     // Generate new candies for the specific compartment
     setDisplayCandies(prev => ({
       ...prev,
-      [type]: generateDisplayCandies(
-        Math.min(candyCounts[type] + refillCount, CANDY_DETAILS[type].defaultCount), 
-        type
-      )
+      [type]: generateDisplayCandies(newCount, type)
     }));
+  };
+  
+  // Handle refill from vendor to floor manager
+  const handleVendorRefill = (type: CandyTypeEnum, amount: number) => {
+    if (stockLevels.vendor[type] < amount) {
+      toast.error(`Vendor doesn't have enough ${CANDY_DETAILS[type].name} stock!`);
+      return;
+    }
+    
+    setStockLevels(prev => ({
+      ...prev,
+      vendor: {
+        ...prev.vendor,
+        [type]: prev.vendor[type] - amount
+      },
+      floorManager: {
+        ...prev.floorManager,
+        [type]: prev.floorManager[type] + amount
+      }
+    }));
+    
+    toast.success(`Floor manager received ${amount} ${CANDY_DETAILS[type].name} from vendor!`);
   };
 
   // Handle collecting all candies
@@ -243,6 +392,15 @@ const CandyMachine = () => {
         [selectedType]: prev[selectedType] - 1
       }));
       
+      // Update stock levels
+      setStockLevels(prev => ({
+        ...prev,
+        vendingMachine: {
+          ...prev.vendingMachine,
+          [selectedType]: prev.vendingMachine[selectedType] - 1
+        }
+      }));
+      
       // Update display candies
       setDisplayCandies(prev => ({
         ...prev,
@@ -298,6 +456,173 @@ const CandyMachine = () => {
             transformStyle: "preserve-3d"
           }}
         >
+          {/* Stock Management Tab */}
+          <div className="absolute top-4 right-4 z-30">
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="bg-gray-700 hover:bg-gray-800 text-white p-2 rounded-full shadow-lg transition-all">
+                  <Menu size={20} />
+                </button>
+              </SheetTrigger>
+              <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="text-center text-xl font-bold">Stock Management</SheetTitle>
+                  <SheetDescription className="text-center">
+                    Monitor and manage inventory levels
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="py-6">
+                  <Tabs defaultValue="machine" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="machine" className="flex items-center gap-2">
+                        <Store size={16} />
+                        <span>Machine Stock</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="floor" className="flex items-center gap-2">
+                        <User size={16} />
+                        <span>Floor Stock</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="vendor" className="flex items-center gap-2">
+                        <Truck size={16} />
+                        <span>Vendor Stock</span>
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {/* Machine Stock Tab */}
+                    <TabsContent value="machine" className="space-y-4 mt-4">
+                      <div className="bg-gray-100 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-4">Vending Machine Inventory</h3>
+                        <div className="space-y-3">
+                          {Object.entries(stockLevels.vendingMachine).map(([type, count]) => (
+                            <div key={`machine-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-8 flex items-center justify-center">
+                                  <Candy 
+                                    candy={{id: `stock-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0}}
+                                    onEat={() => {}}
+                                    isDisplayOnly={true}
+                                    containerWidth={50}
+                                    containerHeight={30}
+                                  />
+                                </div>
+                                <span className="font-medium">{CANDY_DETAILS[type as CandyTypeEnum].name}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className={`px-3 py-1 rounded ${count < 3 ? 'bg-red-100 text-red-800' : count < 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                  {count}/{CANDY_DETAILS[type as CandyTypeEnum].defaultCount}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    {/* Floor Manager Stock Tab */}
+                    <TabsContent value="floor" className="space-y-4 mt-4">
+                      <div className="bg-gray-100 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-4">Floor Manager Inventory</h3>
+                        <div className="space-y-3">
+                          {Object.entries(stockLevels.floorManager).map(([type, count]) => (
+                            <div key={`floor-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-8 flex items-center justify-center">
+                                  <Candy 
+                                    candy={{id: `floor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0}}
+                                    onEat={() => {}}
+                                    isDisplayOnly={true}
+                                    containerWidth={50}
+                                    containerHeight={30}
+                                  />
+                                </div>
+                                <span className="font-medium">{CANDY_DETAILS[type as CandyTypeEnum].name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded ${count < 5 ? 'bg-red-100 text-red-800' : count < 10 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                  {count}
+                                </span>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-xs rounded">
+                                      Request
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Request Stock from Vendor</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        How many {CANDY_DETAILS[type as CandyTypeEnum].name} would you like to request?
+                                        <Input 
+                                          type="number" 
+                                          min="1" 
+                                          max="20" 
+                                          defaultValue="10"
+                                          className="mt-2" 
+                                          id={`request-${type}`}
+                                        />
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => {
+                                        const input = document.getElementById(`request-${type}`) as HTMLInputElement;
+                                        const amount = parseInt(input.value);
+                                        if (!isNaN(amount) && amount > 0) {
+                                          handleVendorRefill(type as CandyTypeEnum, amount);
+                                        }
+                                      }}>Request</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    {/* Vendor Stock Tab */}
+                    <TabsContent value="vendor" className="space-y-4 mt-4">
+                      <div className="bg-gray-100 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-4">Vendor Warehouse Inventory</h3>
+                        <div className="space-y-3">
+                          {Object.entries(stockLevels.vendor).map(([type, count]) => (
+                            <div key={`vendor-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-8 flex items-center justify-center">
+                                  <Candy 
+                                    candy={{id: `vendor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0}}
+                                    onEat={() => {}}
+                                    isDisplayOnly={true}
+                                    containerWidth={50}
+                                    containerHeight={30}
+                                  />
+                                </div>
+                                <span className="font-medium">{CANDY_DETAILS[type as CandyTypeEnum].name}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className={`px-3 py-1 rounded ${count < 20 ? 'bg-red-100 text-red-800' : count < 30 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                  {count}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+                
+                <SheetFooter>
+                  <SheetClose asChild>
+                    <Button className="w-full">Close</Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+          </div>
+          
           {/* Machine header with brand */}
           <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 rounded-t-md border-b-4 border-gray-600">
             <h1 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md tracking-wider">CANDY HUB</h1>
@@ -305,12 +630,12 @@ const CandyMachine = () => {
           </div>
           
           {/* Machine body with enhanced cylindrical shape */}
-          <div className="relative p-6 bg-gradient-to-b from-gray-200 to-gray-300 rounded-xl">
+          <div className="relative p-4 md:p-6 bg-gradient-to-b from-gray-200 to-gray-300 rounded-xl">
             
-            {/* Top half of product display window - SMALLER */}
+            {/* Top half of product display window - SMALLER with better spacing */}
             <div 
               ref={displayWindowRef}
-              className="display-window relative h-36 rounded-t-lg mb-0 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+              className="display-window relative h-32 rounded-t-lg mb-2 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
                 borderRadius: "12px 12px 0 0",
                 boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
@@ -320,8 +645,8 @@ const CandyMachine = () => {
               <div className="absolute top-0 left-0 right-0 h-12 bg-white opacity-20 transform skew-y-3"></div>
               
               {/* Candy compartments grid - Top row */}
-              <div className="grid grid-cols-3 gap-2 p-3 h-full">
-                {/* 5 Star compartment */}
+              <div className="grid grid-cols-3 gap-3 p-3 h-full">
+                {/* 5 Star compartment - Enhanced design */}
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A1: 5 Star ({candyCounts.fivestar})
@@ -342,7 +667,7 @@ const CandyMachine = () => {
                   {/* Refill button */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors flex items-center gap-1">
+                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
                         <RefreshCw size={12} />
                         Refill
                       </button>
@@ -362,6 +687,9 @@ const CandyMachine = () => {
                           />
                           <div className="mt-2 text-sm">
                             Current: {candyCounts.fivestar} / {CANDY_DETAILS.fivestar.defaultCount}
+                          </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.fivestar}
                           </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -394,7 +722,7 @@ const CandyMachine = () => {
                   {/* Refill button */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors flex items-center gap-1">
+                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
                         <RefreshCw size={12} />
                         Refill
                       </button>
@@ -415,6 +743,9 @@ const CandyMachine = () => {
                           <div className="mt-2 text-sm">
                             Current: {candyCounts.milkybar} / {CANDY_DETAILS.milkybar.defaultCount}
                           </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.milkybar}
+                          </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -425,7 +756,7 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
                 
-                {/* Dairy Milk compartment */}
+                {/* Dairy Milk compartment - Enhanced design */}
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A3: Dairy Milk ({candyCounts.dairymilk})
@@ -446,7 +777,7 @@ const CandyMachine = () => {
                   {/* Refill button */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors flex items-center gap-1">
+                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
                         <RefreshCw size={12} />
                         Refill
                       </button>
@@ -467,6 +798,9 @@ const CandyMachine = () => {
                           <div className="mt-2 text-sm">
                             Current: {candyCounts.dairymilk} / {CANDY_DETAILS.dairymilk.defaultCount}
                           </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.dairymilk}
+                          </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -479,8 +813,8 @@ const CandyMachine = () => {
               </div>
             </div>
             
-            {/* ENLARGED LED Screen in the middle */}
-            <div className="relative mx-auto w-full h-80 bg-gray-900 rounded-md border-8 border-gray-800 overflow-hidden shadow-inner">
+            {/* ENLARGED LED Screen in the middle - with proper spacing and design */}
+            <div className="relative mx-auto w-full h-96 bg-gray-900 rounded-md border-8 border-gray-800 overflow-hidden shadow-inner">
               {/* Screen bezel with LED-like texture */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
@@ -489,12 +823,15 @@ const CandyMachine = () => {
                 <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
               </div>
               
-              {/* LED screen content - embedded iframe with improved size */}
-              <div className="w-full h-full overflow-hidden">
+              {/* White backing for screen */}
+              <div className="absolute inset-4 bg-white rounded-sm shadow-inner"></div>
+              
+              {/* LED screen content - embedded iframe with improved size and zoom */}
+              <div className="absolute inset-4 overflow-hidden rounded-sm">
                 <iframe 
                   src="https://lovable.dev" 
                   title="Lovable Website"
-                  className="w-full h-full border-0" 
+                  className="w-full h-full border-0 transform scale-75 origin-top" 
                   loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 ></iframe>
@@ -502,18 +839,24 @@ const CandyMachine = () => {
               
               {/* Screen reflection */}
               <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white to-transparent opacity-5 pointer-events-none"></div>
+              
+              {/* Power indicator light */}
+              <div className="absolute bottom-2 right-2 flex items-center gap-2 pointer-events-none">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[8px] text-green-500">ONLINE</span>
+              </div>
             </div>
             
-            {/* Bottom half of product display window - SMALLER */}
+            {/* Bottom half of product display window - SMALLER with better spacing */}
             <div 
-              className="display-window relative h-36 rounded-b-lg mt-0 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+              className="display-window relative h-32 rounded-b-lg mt-2 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
                 borderRadius: "0 0 12px 12px",
                 boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
               }}
             >
               {/* Candy compartments grid - Bottom row */}
-              <div className="grid grid-cols-2 gap-2 p-3 h-full">
+              <div className="grid grid-cols-2 gap-3 p-3 h-full">
                 {/* Eclairs compartment */}
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
@@ -535,7 +878,7 @@ const CandyMachine = () => {
                   {/* Refill button */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors flex items-center gap-1">
+                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
                         <RefreshCw size={12} />
                         Refill
                       </button>
@@ -555,6 +898,9 @@ const CandyMachine = () => {
                           />
                           <div className="mt-2 text-sm">
                             Current: {candyCounts.eclairs} / {CANDY_DETAILS.eclairs.defaultCount}
+                          </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.eclairs}
                           </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -587,7 +933,7 @@ const CandyMachine = () => {
                   {/* Refill button */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition-colors flex items-center gap-1">
+                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
                         <RefreshCw size={12} />
                         Refill
                       </button>
@@ -608,6 +954,9 @@ const CandyMachine = () => {
                           <div className="mt-2 text-sm">
                             Current: {candyCounts.ferrero} / {CANDY_DETAILS.ferrero.defaultCount}
                           </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.ferrero}
+                          </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -621,7 +970,7 @@ const CandyMachine = () => {
             </div>
             
             {/* Enhanced machine dispensing mechanism with animation */}
-            <div className="relative mx-auto w-3/4 h-8 bg-gray-700 rounded-t-lg mb-0 flex justify-center items-center">
+            <div className="relative mx-auto w-3/4 h-8 bg-gray-700 rounded-t-lg mb-0 mt-2 flex justify-center items-center">
               <div className="w-20 h-1 bg-black"></div>
               {isDispensing && (
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
@@ -630,11 +979,11 @@ const CandyMachine = () => {
               )}
             </div>
             
-            {/* Collector tray - SMALLER as requested */}
+            {/* Ultra-minimal collector tray */}
             <div className="relative mx-auto w-3/4 perspective">
               <div 
                 ref={trayRef}
-                className="collector-tray relative h-24 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
+                className="collector-tray relative h-16 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
                 style={{
                   borderBottomRightRadius: "30px",
                   borderBottomLeftRadius: "30px",
@@ -642,14 +991,14 @@ const CandyMachine = () => {
                 }}
               >
                 {/* Tray label */}
-                <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                <div className="absolute top-1 left-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
                   Collection Tray
                 </div>
                 
                 {/* Collect All button */}
                 <button 
                   onClick={handleCollectAll}
-                  className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors flex items-center gap-1 z-20"
+                  className="absolute top-1 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors flex items-center gap-1 z-20 shadow-md"
                   disabled={collectedCandies.length === 0}
                 >
                   <ShoppingCart size={12} />
@@ -711,16 +1060,20 @@ const CandyMachine = () => {
             </div>
           </div>
           
-          {/* Controls moved outside - Operation controls */}
+          {/* Controls moved outside - Operation controls with improved design */}
           <div className="bg-gray-800 p-4 rounded-md shadow-inner">
             <div className="mb-3 flex justify-between items-center">
-              <div className="text-sm text-white font-semibold">OPERATION</div>
+              <div className="text-sm text-white font-semibold flex items-center gap-2">
+                <Zap size={16} className="text-yellow-400" />
+                OPERATION
+              </div>
               <div className="w-8 h-4 bg-red-500 rounded-sm shadow-inner"></div>
             </div>
             
+            {/* Enhanced dispense button */}
             <Button
               onClick={handleDispense}
-              className="w-full mb-2"
+              className="w-full mb-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-2 border-green-700 shadow-lg"
               disabled={isDispensing || candyCounts.eclairs <= 0}
             >
               <Package size={18} />
@@ -728,20 +1081,25 @@ const CandyMachine = () => {
             </Button>
             
             <div className="mb-4 mt-4">
-              <div className="text-sm text-white font-semibold mb-2">WIN DROP</div>
+              <div className="text-sm text-white font-semibold mb-2 flex items-center gap-2">
+                <PackagePlus size={14} className="text-yellow-400" />
+                WIN DROP
+              </div>
               <div className="flex space-x-2">
                 <Input
                   ref={scoreInputRef}
                   type="number"
                   min="1"
                   placeholder="Enter score"
-                  className="flex-1"
+                  className="flex-1 bg-gray-700 border-gray-600 text-white"
                   disabled={isDispensing}
                 />
+                {/* Enhanced drop button */}
                 <Button
                   onClick={handleWinDrop}
                   variant="secondary"
                   disabled={isDispensing}
+                  className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 border-2 border-indigo-700 shadow-lg text-white"
                 >
                   <PackagePlus size={18} />
                   Drop
@@ -749,9 +1107,10 @@ const CandyMachine = () => {
               </div>
             </div>
             
+            {/* Enhanced refill all button */}
             <Button
               onClick={handleRefillAll}
-              className="w-full mt-2"
+              className="w-full mt-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-2 border-blue-700 shadow-lg"
               disabled={isDispensing}
             >
               <RefreshCw size={18} />
