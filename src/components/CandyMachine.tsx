@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -718,4 +719,52 @@ const CandyMachine = () => {
             </div>
             
             <Button
-              onClick={handle
+              onClick={handleDispense}
+              className="w-full mb-2"
+              disabled={isDispensing || candyCounts.eclairs <= 0}
+            >
+              <Package size={18} />
+              Dispense Eclairs
+            </Button>
+            
+            <div className="mb-4 mt-4">
+              <div className="text-sm text-white font-semibold mb-2">WIN DROP</div>
+              <div className="flex space-x-2">
+                <Input
+                  ref={scoreInputRef}
+                  type="number"
+                  min="1"
+                  placeholder="Enter score"
+                  className="flex-1"
+                  disabled={isDispensing}
+                />
+                <Button
+                  onClick={handleWinDrop}
+                  variant="secondary"
+                  disabled={isDispensing}
+                >
+                  <PackagePlus size={18} />
+                  Drop
+                </Button>
+              </div>
+            </div>
+            
+            <Button
+              onClick={handleRefillAll}
+              className="w-full mt-2"
+              disabled={isDispensing}
+            >
+              <RefreshCw size={18} />
+              Refill All
+            </Button>
+          </div>
+          
+          {/* History Panel */}
+          <HistoryPanel history={history} />
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default CandyMachine;
