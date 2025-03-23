@@ -29,7 +29,8 @@ import {
   Truck, 
   User, 
   Store,
-  Zap
+  Zap,
+  Trophy
 } from 'lucide-react';
 import { toast } from "sonner";
 import { 
@@ -586,7 +587,7 @@ const CandyMachine = () => {
             
             <div 
               ref={displayWindowRef}
-              className="display-window relative h-32 rounded-t-lg mb-2 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+              className="display-window relative h-40 rounded-t-lg mb-4 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
                 borderRadius: "12px 12px 0 0",
                 boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
@@ -756,7 +757,7 @@ const CandyMachine = () => {
               </div>
             </div>
             
-            <div className="relative mx-auto w-full h-96 bg-gray-900 rounded-md border-8 border-gray-800 overflow-hidden shadow-inner">
+            <div className="relative mx-auto w-full h-60 bg-gray-900 rounded-md border-8 border-gray-800 overflow-hidden shadow-inner">
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
@@ -764,13 +765,13 @@ const CandyMachine = () => {
                 <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
               </div>
               
-              <div className="absolute inset-4 bg-white rounded-sm shadow-inner"></div>
+              <div className="absolute inset-8 bg-white rounded-sm shadow-inner"></div>
               
-              <div className="absolute inset-4 overflow-hidden rounded-sm">
+              <div className="absolute inset-8 overflow-hidden rounded-sm">
                 <iframe 
                   src="https://lovable.dev" 
                   title="Lovable Website"
-                  className="w-full h-full border-0 transform scale-75 origin-top" 
+                  className="w-full h-full border-0 transform scale-90 origin-center" 
                   loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 ></iframe>
@@ -785,7 +786,7 @@ const CandyMachine = () => {
             </div>
             
             <div 
-              className="display-window relative h-32 rounded-b-lg mt-2 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+              className="display-window relative h-40 rounded-b-lg mt-4 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
                 borderRadius: "0 0 12px 12px",
                 boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
@@ -900,7 +901,7 @@ const CandyMachine = () => {
               </div>
             </div>
             
-            <div className="relative mx-auto w-3/4 h-8 bg-gray-700 rounded-t-lg mb-0 mt-2 flex justify-center items-center">
+            <div className="relative mx-auto w-3/4 h-8 bg-gray-700 rounded-t-lg mb-0 mt-4 flex justify-center items-center">
               <div className="w-20 h-1 bg-black"></div>
               {isDispensing && (
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
@@ -912,7 +913,7 @@ const CandyMachine = () => {
             <div className="relative mx-auto w-3/4 perspective">
               <div 
                 ref={trayRef}
-                className="collector-tray relative h-16 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
+                className="collector-tray relative h-24 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
                 style={{
                   borderBottomRightRadius: "30px",
                   borderBottomLeftRadius: "30px",
@@ -993,16 +994,24 @@ const CandyMachine = () => {
             
             <Button
               onClick={handleDispense}
-              className="w-full mb-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-2 border-green-700 shadow-lg"
+              className="w-full mb-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-2 border-green-700 shadow-lg flex items-center justify-center gap-2"
               disabled={isDispensing || candyCounts.eclairs <= 0}
             >
-              <Package size={18} />
+              <div className="w-6 h-6 flex items-center justify-center">
+                <Candy 
+                  candy={{id: 'eclairs-button', type: 'eclairs', x: 0, y: 0, rotation: 0}}
+                  onEat={() => {}}
+                  isDisplayOnly={true}
+                  containerWidth={30}
+                  containerHeight={20}
+                />
+              </div>
               Dispense Eclairs
             </Button>
             
             <div className="mb-4 mt-4">
               <div className="text-sm text-white font-semibold mb-2 flex items-center gap-2">
-                <PackagePlus size={14} className="text-yellow-400" />
+                <Trophy size={14} className="text-yellow-400" />
                 WIN DROP
               </div>
               <div className="flex space-x-2">
@@ -1018,9 +1027,9 @@ const CandyMachine = () => {
                   onClick={handleWinDrop}
                   variant="secondary"
                   disabled={isDispensing}
-                  className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 border-2 border-indigo-700 shadow-lg text-white"
+                  className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 border-2 border-indigo-700 shadow-lg text-white flex items-center gap-2"
                 >
-                  <PackagePlus size={18} />
+                  <Trophy size={16} className="text-yellow-200" />
                   Drop
                 </Button>
               </div>
