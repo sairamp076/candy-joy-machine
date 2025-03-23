@@ -6,6 +6,7 @@ import Candy from './Candy';
 import HistoryPanel from './HistoryPanel';
 import { 
   Candy as CandyType, 
+  CandyType as CandyTypeEnum,
   HistoryItem,
   createCandy, 
   getCandyCountForScore, 
@@ -23,14 +24,14 @@ import { PackagePlus, Package, ShoppingCart, RefreshCw } from 'lucide-react';
 
 const CandyMachine = () => {
   // Updated state to track candy counts in each compartment
-  const [candyCounts, setCandyCounts] = useState<{[key in CandyType]: number}>({
+  const [candyCounts, setCandyCounts] = useState<Record<CandyTypeEnum, number>>({
     fivestar: CANDY_DETAILS.fivestar.defaultCount,
     milkybar: CANDY_DETAILS.milkybar.defaultCount,
     dairymilk: CANDY_DETAILS.dairymilk.defaultCount,
     eclairs: CANDY_DETAILS.eclairs.defaultCount
   });
   
-  const [displayCandies, setDisplayCandies] = useState<{[key: string]: CandyType[]}>({
+  const [displayCandies, setDisplayCandies] = useState<Record<CandyTypeEnum, CandyType[]>>({
     fivestar: [],
     milkybar: [],
     dairymilk: [],
@@ -56,7 +57,7 @@ const CandyMachine = () => {
   }, []);
   
   const initializeCandies = () => {
-    const newDisplayCandies = {
+    const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
       fivestar: generateDisplayCandies(candyCounts.fivestar, 'fivestar'),
       milkybar: generateDisplayCandies(candyCounts.milkybar, 'milkybar'),
       dairymilk: generateDisplayCandies(candyCounts.dairymilk, 'dairymilk'),
@@ -114,7 +115,7 @@ const CandyMachine = () => {
     });
     
     // Refill all compartments with default count
-    const newDisplayCandies = {
+    const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
       fivestar: generateDisplayCandies(CANDY_DETAILS.fivestar.defaultCount, 'fivestar'),
       milkybar: generateDisplayCandies(CANDY_DETAILS.milkybar.defaultCount, 'milkybar'),
       dairymilk: generateDisplayCandies(CANDY_DETAILS.dairymilk.defaultCount, 'dairymilk'),
@@ -125,7 +126,7 @@ const CandyMachine = () => {
   };
 
   // Handle refill for a specific compartment
-  const handleRefillCompartment = (type: CandyType) => {
+  const handleRefillCompartment = (type: CandyTypeEnum) => {
     if (isDispensing) return;
     
     playSound('button');
@@ -190,8 +191,8 @@ const CandyMachine = () => {
     
     // Prepare to drop candies
     let droppedCount = 0;
-    let remainingTypes = Object.keys(candyCounts).filter(
-      type => candyCounts[type as CandyType] > 0
+    let remainingTypes: CandyTypeEnum[] = (Object.keys(candyCounts) as CandyTypeEnum[]).filter(
+      type => candyCounts[type] > 0
     );
     
     if (remainingTypes.length === 0) {
@@ -209,7 +210,7 @@ const CandyMachine = () => {
       
       // Randomly select a candy type that still has candies
       const randomTypeIndex = Math.floor(Math.random() * remainingTypes.length);
-      const selectedType = remainingTypes[randomTypeIndex] as CandyType;
+      const selectedType = remainingTypes[randomTypeIndex];
       
       // Check if we still have candies of this type
       if (candyCounts[selectedType] <= 0) {
@@ -264,13 +265,13 @@ const CandyMachine = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-6">
+    <div className="w-full min-h-screen flex flex-col lg:flex-row items-center justify-center gap-6 p-4">
       {/* 3D Candy Machine with improved cylindrical shape */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="flex-1 bg-gradient-to-b from-gray-300 to-gray-400 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-500 relative"
+        className="w-full max-w-4xl bg-gradient-to-b from-gray-300 to-gray-400 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-500 relative"
         style={{
           transform: "perspective(1000px) rotateX(5deg)",
           transformStyle: "preserve-3d"
@@ -280,6 +281,33 @@ const CandyMachine = () => {
         <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 rounded-t-md border-b-4 border-gray-600">
           <h1 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md tracking-wider">CANDY HUB</h1>
           <p className="text-sm text-center text-gray-100">Premium Candy Vending</p>
+        </div>
+        
+        {/* LED Screen in the middle */}
+        <div className="relative mx-auto my-4 w-3/4 h-40 bg-gray-900 rounded-md border-8 border-gray-800 overflow-hidden shadow-inner">
+          {/* Screen bezel with LED-like texture */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
+            <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
+            <div className="absolute top-0 bottom-0 right-0 w-1 bg-gradient-to-b from-blue-400 via-blue-300 to-blue-400 opacity-70"></div>
+          </div>
+          
+          {/* LED screen content - embedded iframe */}
+          <div className="w-full h-full overflow-hidden">
+            <div className="w-full h-full flex items-center justify-center bg-black text-center">
+              <div className="p-4 w-full">
+                <div className="text-blue-400 text-xl md:text-2xl font-mono mb-2 animate-pulse">LOVABLE.COM</div>
+                <div className="text-green-400 text-xs md:text-sm font-mono animate-pulse">CREATING THE FUTURE</div>
+                <div className="mt-4 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Screen reflection */}
+          <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white to-transparent opacity-5"></div>
         </div>
         
         {/* Machine body with enhanced cylindrical shape */}

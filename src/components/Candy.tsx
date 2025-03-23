@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Candy as CandyType, playSound } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
 

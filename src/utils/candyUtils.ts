@@ -18,7 +18,7 @@ export interface HistoryItem {
 }
 
 // Candy names and base scores
-export const CANDY_DETAILS = {
+export const CANDY_DETAILS: Record<CandyType, { name: string; baseScore: number; defaultCount: number }> = {
   fivestar: { name: '5 Star', baseScore: 15, defaultCount: 15 },
   milkybar: { name: 'Milkybar', baseScore: 10, defaultCount: 15 },
   dairymilk: { name: 'Dairy Milk', baseScore: 20, defaultCount: 15 },
@@ -66,9 +66,8 @@ export const getCandyCountForScore = (score: number): number => {
 /**
  * Generates an array of candy objects
  */
-export const generateCandies = (count: number, type?: CandyType | string, maxX?: number, maxY?: number): Candy[] => {
-  const candyType = typeof type === 'string' ? type as CandyType : undefined;
-  return Array.from({ length: count }, () => createCandy(candyType, maxX, maxY));
+export const generateCandies = (count: number, type?: CandyType, maxX?: number, maxY?: number): Candy[] => {
+  return Array.from({ length: count }, () => createCandy(type, maxX, maxY));
 };
 
 /**
