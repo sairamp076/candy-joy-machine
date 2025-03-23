@@ -1,5 +1,5 @@
 
-export type CandyType = 'fivestar' | 'milkybar' | 'dairymilk' | 'eclairs';
+export type CandyType = 'fivestar' | 'milkybar' | 'dairymilk' | 'eclairs' | 'ferrero';
 
 export interface Candy {
   id: string;
@@ -19,10 +19,11 @@ export interface HistoryItem {
 
 // Candy names and base scores
 export const CANDY_DETAILS: Record<CandyType, { name: string; baseScore: number; defaultCount: number }> = {
-  fivestar: { name: '5 Star', baseScore: 15, defaultCount: 15 },
-  milkybar: { name: 'Milkybar', baseScore: 10, defaultCount: 15 },
-  dairymilk: { name: 'Dairy Milk', baseScore: 20, defaultCount: 15 },
-  eclairs: { name: 'Eclairs', baseScore: 5, defaultCount: 15 }
+  fivestar: { name: '5 Star', baseScore: 15, defaultCount: 10 },
+  milkybar: { name: 'Milkybar', baseScore: 10, defaultCount: 10 },
+  dairymilk: { name: 'Dairy Milk', baseScore: 20, defaultCount: 10 },
+  eclairs: { name: 'Eclairs', baseScore: 5, defaultCount: 10 },
+  ferrero: { name: 'Ferrero Rocher', baseScore: 25, defaultCount: 10 }
 };
 
 /**
@@ -46,7 +47,7 @@ export const createCandy = (
  * Generates a random candy type
  */
 export const getRandomCandyType = (): CandyType => {
-  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs'];
+  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero'];
   return candyTypes[Math.floor(Math.random() * candyTypes.length)];
 };
 

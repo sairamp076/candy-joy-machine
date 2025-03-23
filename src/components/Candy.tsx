@@ -97,6 +97,46 @@ const Candy = ({
             </div>
           </div>
         );
+      case 'ferrero':
+        return (
+          <div className="w-full h-full flex items-center justify-center perspective">
+            <div className="candy-wrapper relative">
+              <div className="w-10 h-10 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full shadow-lg relative border-2 border-amber-700 overflow-hidden">
+                {/* Gold foil wrapper details */}
+                <div className="absolute inset-0 bg-amber-400 opacity-60 rounded-full"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-6 h-6 bg-amber-800 rounded-full border-2 border-amber-900 flex items-center justify-center">
+                    <div className="w-4 h-4 bg-amber-600 rounded-full flex items-center justify-center">
+                      <span className="text-[5px] font-bold text-white transform rotate-0">FR</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Gold wrapper texture */}
+                {[...Array(8)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="absolute w-full h-0.5 bg-amber-200 opacity-50"
+                    style={{ 
+                      top: `${(i+1) * 10}%`, 
+                      transform: `rotate(${i * 22.5}deg)` 
+                    }}
+                  ></div>
+                ))}
+                
+                {/* Label at the top */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-5 h-2 bg-white rounded-b-sm">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-[4px] font-bold text-amber-800">FERRERO</span>
+                  </div>
+                </div>
+                
+                {/* Paper cup base */}
+                <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-amber-900 border-t border-amber-950"></div>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
