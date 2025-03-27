@@ -817,7 +817,7 @@ const CandyMachine = () => {
     ) : (
       <div className="w-full h-full overflow-hidden">
         <iframe
-          src="https://lovable.dev/"
+          src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/-1"
           className="w-full h-full"
           style={{
             transform: "scale(0.75)", // Zooms out to 90%
@@ -825,10 +825,11 @@ const CandyMachine = () => {
             width: "133.33%",
             height: "133.33%",
             border: "none",
-            overflow:"hidden"
+            overflow : "hidden"
           }}
           sandbox="allow-scripts allow-same-origin"
-        ></iframe>
+        >
+        </iframe>
       </div>
     )}
   </div>
