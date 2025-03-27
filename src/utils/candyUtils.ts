@@ -1,3 +1,4 @@
+
 export type CandyType = 'fivestar' | 'milkybar' | 'dairymilk' | 'eclairs' | 'ferrero';
 
 export interface Candy {
@@ -53,44 +54,14 @@ export const getRandomCandyType = (): CandyType => {
 /**
  * Determines how many candies to drop based on score
  */
-export const getCandyCountForScore = (score: number): Record<CandyType, number> => {
-  // Initialize all candy counts to 0
-  const result: Record<CandyType, number> = {
-    fivestar: 0,
-    milkybar: 0,
-    dairymilk: 0,
-    eclairs: 0,
-    ferrero: 0
-  };
-  
-  // Logic based on the score
-  if (score === 0) {
-    result.eclairs = 1;
-  } else if (score === 1) {
-    result.eclairs = 2;
-  } else if (score === 2) {
-    result.fivestar = 1;
-    result.milkybar = 1;
-  } else if (score === 3) {
-    result.fivestar = 1;
-    result.dairymilk = 1;
-    result.ferrero = 1;
-  } else if (score === 4) {
-    result.fivestar = 2;
-    result.milkybar = 2;
-    result.dairymilk = 2;
-    result.eclairs = 2;
-    result.ferrero = 2;
-  } else if (score >= 5) {
-    // Random number of each candy for score 5+
-    result.fivestar = Math.floor(Math.random() * 5) + 3; // 3-7
-    result.milkybar = Math.floor(Math.random() * 5) + 3; // 3-7
-    result.dairymilk = Math.floor(Math.random() * 5) + 3; // 3-7
-    result.eclairs = Math.floor(Math.random() * 5) + 3; // 3-7
-    result.ferrero = Math.floor(Math.random() * 5) + 3; // 3-7
+export const getCandyCountForScore = (score: number): number => {
+  if (score <= 50) {
+    return Math.floor(Math.random() * 2) + 1; // 1-2 candies
+  } else if (score <= 100) {
+    return Math.floor(Math.random() * 3) + 3; // 3-5 candies
+  } else {
+    return Math.floor(Math.random() * 5) + 6; // 6-10 candies
   }
-  
-  return result;
 };
 
 /**

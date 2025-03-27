@@ -213,6 +213,9 @@ const CandyMachine = () => {
     setDisplayCandies(newDisplayCandies);
   };
 
+
+
+
   const [email, setEmail] = useState("");
   const [showFrame, setShowFrame] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -304,6 +307,7 @@ const CandyMachine = () => {
       }
     }, 3000); // Poll every 3 seconds
   };
+
 
   const handleRefillCompartment = (type: CandyTypeEnum) => {
     if (isDispensing) return;
@@ -397,67 +401,49 @@ const CandyMachine = () => {
   };
 
   const handleWinDrop = (score) => {
-    console.log("handling win drop with score:", score);
+    console.log("handling win drop")
     if (isDispensing) return;
 
-    const userScore = parseInt(score);
-    if (isNaN(userScore) || userScore < 0 || userScore > 5) {
-      toast.error("Please enter a valid score between 0 and 5!");
+    const userScore = score
+    if (isNaN(userScore) || userScore <= 0) {
+      toast.error("Please enter a valid score!");
       return;
     }
 
     setIsDispensing(true);
     playSound('button');
 
-    const candyCounts = getCandyCountForScore(userScore);
+    const candyCount = getCandyCountForScore(userScore);
     const trayWidth = trayRef.current?.offsetWidth || 300;
     const trayHeight = trayRef.current?.offsetHeight || 120;
 
     setScore(prevScore => prevScore + userScore);
 
-    // Get list of candy types to dispense and their counts
-    const typesToDispense: Array<{ type: CandyTypeEnum; count: number }> = [];
-    Object.entries(candyCounts).forEach(([type, count]) => {
-      if (count > 0 && candyCounts[type as CandyTypeEnum] > 0) {
-        typesToDispense.push({ 
-          type: type as CandyTypeEnum, 
-          count 
-        });
-      }
-    });
+    let droppedCount = 0;
+    let remainingTypes: CandyTypeEnum[] = (Object.keys(candyCounts) as CandyTypeEnum[]).filter(
+      type => candyCounts[type] > 0
+    );
 
-    if (typesToDispense.length === 0) {
+    if (remainingTypes.length === 0) {
       setIsDispensing(false);
       toast.error("No candies left to dispense!");
       return;
     }
 
-    toast.success(`Dropping candies based on score: ${userScore}!`);
+    toast.success(`Dropping ${candyCount} candies based on score: ${userScore}!`);
 
-    // Flat array of all candies to drop in sequence
-    const dropSequence: CandyTypeEnum[] = [];
-    typesToDispense.forEach(({ type, count }) => {
-      for (let i = 0; i < count; i++) {
-        if (candyCounts[type] > 0) {
-          dropSequence.push(type);
-        }
-      }
-    });
-
-    let droppedCount = 0;
-    
     const dropInterval = setInterval(() => {
-      if (droppedCount >= dropSequence.length) {
+      if (droppedCount >= candyCount || remainingTypes.length === 0) {
         clearInterval(dropInterval);
         setIsDispensing(false);
         return;
       }
 
-      const selectedType = dropSequence[droppedCount];
-      
-      // Skip if out of this candy type
+      const randomTypeIndex = Math.floor(Math.random() * remainingTypes.length);
+      const selectedType = remainingTypes[randomTypeIndex];
+
       if (candyCounts[selectedType] <= 0) {
-        droppedCount++;
+        remainingTypes = remainingTypes.filter(type => type !== selectedType);
         return;
       }
 
@@ -868,59 +854,71 @@ const CandyMachine = () => {
               </div>
             </div>
             <div className="relative mx-auto w-full h-80 bg-gray-900 rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
-              <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
-              <div className="absolute inset-1 bg-black rounded-lg border-2 border-gray-600 shadow-inner"></div>
-              <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
-                {!showFrame ? (
-                  <div className="flex flex-col items-center justify-center h-full bg-gray-800">
-                    <h2 className="text-lg font-semibold text-white mb-4">
-                      Get Started
-                    </h2>
+  {/* Outer Glow to Mimic LED Border */}
+  <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
 
-                    {errorMessage && (
-                      <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
-                    )}
+  {/* Inner Frame with 3D Effect */}
+  <div className="absolute inset-1 bg-black rounded-lg border-2 border-gray-600 shadow-inner"></div>
 
-                    <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="Enter your email"
-                        className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
-                      >
-                        Get Started
-                      </button>
-                    </form>
-                  </div>
-                ) : (
-                  <div className="w-full h-full overflow-hidden">
-                    <iframe
-                      src={iframeUrl}
-                      className="w-full h-full"
-                      style={{
-                        transform: "scale(0.75)",
-                        transformOrigin: "top left",
-                        width: "133.33%",
-                        height: "133.33%",
-                        border: "none",
-                        overflow: "hidden",
-                      }}
-                      sandbox="allow-scripts allow-same-origin"
-                    ></iframe>
-                  </div>
-                )}
-              </div>
+  {/* Full-Screen Website within the Frame */}
+  <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
+  <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
+      {!showFrame ? (
+        <div className="flex flex-col items-center justify-center h-full bg-gray-800">
+          <h2 className="text-lg font-semibold text-white mb-4">
+            Get Started
+          </h2>
+
+          {errorMessage && (
+            <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
+          )}
+
+          <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Enter your email"
+              className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
+            >
+              Get Started
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="w-full h-full overflow-hidden">
+          <iframe
+            src={iframeUrl}
+            className="w-full h-full"
+            style={{
+              transform: "scale(0.75)", // Zooms out to 75%
+              transformOrigin: "top left",
+              width: "133.33%",
+              height: "133.33%",
+              border: "none",
+              overflow: "hidden",
+            }}
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
+        </div>
+      )}
+    </div>
+  </div>
+
+
+              {/* Bottom LED Indicator */}
               <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-                {showFrame?<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>:<div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
+              {showFrame?<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>:<div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
                 {showFrame?(<span className="text-[10px] text-green-500">ACTIVE</span>):(<span className="text-[10px] text-red-500">Not Connected</span>)}
               </div>
             </div>
+
+
 
             <div
               className="display-window relative h-40 rounded-b-lg mt-4 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
