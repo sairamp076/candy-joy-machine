@@ -87,7 +87,7 @@ const CandyMachine = () => {
   });
   const [collectedCandies, setCollectedCandies] = useState<CandyType[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [score, setScore] = useState<number>(0);
+  const [score, setScore] = useState(0);
   const [isDispensing, setIsDispensing] = useState<boolean>(false);
   const [refillCount, setRefillCount] = useState<number>(5);
 
@@ -251,6 +251,7 @@ const CandyMachine = () => {
         setIframeUrl(updatedUrl);
         setShowFrame(true);
         setErrorMessage("");
+        startPolling(email);
       } else {
         setErrorMessage("Failed to connect. Please try again.");
         setShowFrame(false);
@@ -260,6 +261,51 @@ const CandyMachine = () => {
       setErrorMessage("Failed to connect. Please try again.");
       setShowFrame(false);
     }
+  };
+
+  const [polling, setPolling] = useState(false);
+  const [scoreFound, setScoreFound] = useState(false);
+
+  const startPolling = (email) => {
+    setPolling(true);
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const pollResponse = await fetch(
+          `https://hackai.service-now.com/api/snc/candyauthenticator?email=${encodeURIComponent(
+            email
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie:
+                "BIGipServerpool_hackai=c4a53b71e722863906d11e0d6380e527; JSESSIONID=C6E94718F99E49F0FD32C9F243D0F038; glide_node_id_for_js=bc3e6ce5848075e1326798b0a2a05f7cb0f8e60809cf43ad618319fb4009edab; glide_user_route=glide.f0de4775f7e89ad60bb51e4d6c3d0ba6",
+            },
+          }
+        );
+
+        if (!pollResponse.ok) {
+          throw new Error("Polling API request failed");
+        }
+
+        const pollData = await pollResponse.json();
+        const score = pollData.result?.score;
+
+        if (score && score !== "") {
+          clearInterval(pollInterval);
+          setScoreFound(true);
+          setShowFrame(true);
+          setScore(score)
+          handleWinDrop(score)
+          console.log("Score received:", score);
+        }
+      } catch (error) {
+        console.error("Polling error:", error);
+        clearInterval(pollInterval);
+        setErrorMessage("Polling failed. Try again.");
+      }
+    }, 3000); // Poll every 3 seconds
   };
 
 
@@ -354,10 +400,11 @@ const CandyMachine = () => {
     setCollectedCandies([]);
   };
 
-  const handleWinDrop = () => {
+  const handleWinDrop = (score) => {
+    console.log("handling win drop")
     if (isDispensing) return;
 
-    const userScore = parseInt(scoreInputRef.current?.value || "0", 10);
+    const userScore = score
     if (isNaN(userScore) || userScore <= 0) {
       toast.error("Please enter a valid score!");
       return;
@@ -1066,9 +1113,6 @@ const CandyMachine = () => {
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-6 shadow-md border border-gray-200">
             <h2 className="text-xl font-semibold mb-2">Your Score</h2>
             <div className="text-4xl font-bold text-blue-600">{score}</div>
-            <div className="text-sm text-gray-500 mt-2">
-              History Total: {calculateTotalScore(history)}
-            </div>
           </div>
 
           <div className="bg-gray-800 p-4 rounded-md shadow-inner">
@@ -1077,7 +1121,6 @@ const CandyMachine = () => {
                 <Zap size={16} className="text-yellow-400" />
                 OPERATION
               </div>
-              <div className="w-8 h-4 bg-red-500 rounded-sm shadow-inner"></div>
             </div>
 
             <Button
@@ -1099,27 +1142,6 @@ const CandyMachine = () => {
 
             <div className="mb-4 mt-4">
               <div className="text-sm text-white font-semibold mb-2 flex items-center gap-2">
-                <Trophy size={14} className="text-yellow-400" />
-                WIN DROP
-              </div>
-              <div className="flex space-x-2">
-                <Input
-                  ref={scoreInputRef}
-                  type="number"
-                  min="1"
-                  placeholder="Enter score"
-                  className="flex-1 bg-gray-700 border-gray-600 text-white"
-                  disabled={isDispensing}
-                />
-                <Button
-                  onClick={handleWinDrop}
-                  variant="secondary"
-                  disabled={isDispensing}
-                  className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 border-2 border-indigo-700 shadow-lg text-white flex items-center gap-2"
-                >
-                  <Trophy size={16} className="text-yellow-200" />
-                  Drop
-                </Button>
               </div>
             </div>
 

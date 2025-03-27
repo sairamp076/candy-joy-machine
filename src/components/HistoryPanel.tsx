@@ -44,9 +44,6 @@ const HistoryPanel = ({ history, className }: HistoryPanelProps) => {
     <div className={cn("bg-white bg-opacity-80 backdrop-blur-sm rounded-lg p-6 shadow-md", className)}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Candy History</h2>
-        <div className="score-pill">
-          Total Score: {totalScore}
-        </div>
       </div>
       
       <div className="space-y-4">
@@ -69,9 +66,6 @@ const HistoryPanel = ({ history, className }: HistoryPanelProps) => {
               <div className="text-sm font-medium bg-gray-100 px-2 py-1 rounded">
                 x{group.count}
               </div>
-            </div>
-            <div className="text-sm text-gray-500">
-              Score: {group.totalScore} pts
             </div>
           </motion.div>
         ))}
