@@ -7,10 +7,9 @@ import { motion } from 'framer-motion';
 interface HistoryPanelProps {
   history: HistoryItem[];
   className?: string;
-  totalScore?: number;
 }
 
-const HistoryPanel = ({ history, className, totalScore }: HistoryPanelProps) => {
+const HistoryPanel = ({ history, className }: HistoryPanelProps) => {
   if (history.length === 0) {
     return (
       <div className={cn("bg-white bg-opacity-80 backdrop-blur-sm rounded-lg p-6 shadow-md", className)}>
@@ -35,20 +34,18 @@ const HistoryPanel = ({ history, className, totalScore }: HistoryPanelProps) => 
     return acc;
   }, {} as Record<string, { count: number; totalScore: number; items: HistoryItem[] }>);
 
-  // Calculate total score if not provided as prop
-  const displayTotalScore = totalScore !== undefined ? 
-    totalScore : 
-    Object.values(groupedHistory).reduce(
-      (sum, group) => sum + group.totalScore, 
-      0
-    );
+  // Calculate total score
+  const totalScore = Object.values(groupedHistory).reduce(
+    (sum, group) => sum + group.totalScore, 
+    0
+  );
 
   return (
     <div className={cn("bg-white bg-opacity-80 backdrop-blur-sm rounded-lg p-6 shadow-md", className)}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Candy History</h2>
         <div className="score-pill">
-          Total Score: {displayTotalScore}
+          Total Score: {totalScore}
         </div>
       </div>
       
