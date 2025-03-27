@@ -817,7 +817,7 @@ const CandyMachine = () => {
     ) : (
       <div className="w-full h-full overflow-hidden">
         <iframe
-          src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/-1"
+          src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/199810e12ba8ae10d6e1f66cfe91bfe4"
           className="w-full h-full"
           style={{
             transform: "scale(0.75)", // Zooms out to 90%
