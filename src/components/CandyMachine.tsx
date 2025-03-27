@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -114,16 +115,6 @@ const CandyMachine = () => {
     };
     
     setDisplayCandies(newDisplayCandies);
-  };
-
-  const [showFrame, setShowFrame] = useState(false);
-  const [email, setEmail] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (email) {
-      setShowFrame(true);
-    }
   };
 
   const handleDispense = () => {
@@ -414,7 +405,7 @@ const CandyMachine = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-3xl bg-gradient-to-b from-gray-300 to-gray-400 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-500 relative"
+          className="w-full max-w-4xl bg-gradient-to-b from-gray-300 to-gray-400 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-500 relative"
           style={{
             transform: "perspective(1000px) rotateX(5deg)",
             transformStyle: "preserve-3d"
@@ -522,6 +513,12 @@ const CandyMachine = () => {
                                           className="mt-2" 
                                           id={`request-${type}`}
                                         />
+                                        <div className="mt-2 text-sm">
+                                          Current floor stock: {count}
+                                        </div>
+                                        <div className="mt-1 text-sm">
+                                          Available from vendor: {stockLevels.vendor[type as CandyTypeEnum]}
+                                        </div>
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -595,29 +592,20 @@ const CandyMachine = () => {
           
           <div className="relative p-4 md:p-6 bg-gradient-to-b from-gray-200 to-gray-300 rounded-xl">
             
-            <div 
-              ref={displayWindowRef}
-              className="display-window relative h-40 rounded-t-lg mb-4 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
-              style={{
-                borderRadius: "12px 12px 0 0",
-                boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
-              }}
-            >
-              <div className="absolute top-0 left-0 right-0 h-12 bg-white opacity-20 transform skew-y-3"></div>
-              
-              <div className="grid grid-cols-3 gap-3 p-3 h-full">
-                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+            <div className="flex flex-row h-[600px] gap-4">
+              <div className="w-2/5 flex flex-col gap-2 h-full">
+                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300 flex-1">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A1: 5 Star ({candyCounts.fivestar})
                   </div>
                   <div className="flex flex-wrap justify-center items-center h-full">
-                    {displayCandies.fivestar.map((candy, index) => (
+                    {displayCandies.fivestar.slice(0, 5).map((candy, index) => (
                       <div key={`display-fivestar-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                         <Candy 
                           candy={candy}
                           onEat={() => {}}
                           isDisplayOnly={true}
-                          containerWidth={100}
+                          containerWidth={90}
                           containerHeight={60}
                         />
                       </div>
@@ -659,18 +647,18 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
                 
-                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300 flex-1">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A2: Milkybar ({candyCounts.milkybar})
                   </div>
                   <div className="flex flex-wrap justify-center items-center h-full">
-                    {displayCandies.milkybar.map((candy, index) => (
+                    {displayCandies.milkybar.slice(0, 5).map((candy, index) => (
                       <div key={`display-milkybar-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                         <Candy 
                           candy={candy}
                           onEat={() => {}}
                           isDisplayOnly={true}
-                          containerWidth={100}
+                          containerWidth={90}
                           containerHeight={60}
                         />
                       </div>
@@ -712,18 +700,18 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
                 
-                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300 flex-1">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A3: Dairy Milk ({candyCounts.dairymilk})
                   </div>
                   <div className="flex flex-wrap justify-center items-center h-full">
-                    {displayCandies.dairymilk.map((candy, index) => (
+                    {displayCandies.dairymilk.slice(0, 5).map((candy, index) => (
                       <div key={`display-dairymilk-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                         <Candy 
                           candy={candy}
                           onEat={() => {}}
                           isDisplayOnly={true}
-                          containerWidth={100}
+                          containerWidth={90}
                           containerHeight={60}
                         />
                       </div>
@@ -764,92 +752,19 @@ const CandyMachine = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-              </div>
-            </div>
-            
-            <div className="relative mx-auto w-80 h-80 bg-transparent rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
-  {/* Outer Glow to Mimic LED Border */}
-  <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
-
-  {/* Inner Frame with Glass-Like Transparency */}
-  <div className="absolute inset-1 bg-white bg-opacity-10 backdrop-blur-md rounded-lg border-2 border-gray-600 shadow-inner"></div>
-
-  {/* Full-Screen Website within the Frame */}
-  <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
-
-  {!showFrame ? (
-            <div className="flex flex-col items-center justify-center h-full bg-gray-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Get Started
-              </h2>
-              <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="Enter your email"
-                  className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
-                >
-                  Get Started
-                </button>
-              </form>
-            </div>
-          ) : (
-            <iframe
-            src="https://hackai.service-now.com/custom_html_page.do"
-            width="100%"
-            height="600"
-            frameborder="0"
-            sandbox="allow-scripts allow-same-origin"
-          ></iframe>
-          )}
-  </div>
-
-  {/* Bottom LED Indicator */}
-  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-  <div
-            className={`w-2 h-2 ${
-              showFrame ? "bg-green-500" : "bg-red-500"
-            } rounded-full animate-pulse`}
-          ></div>
-    <span
-            className={`text-[10px] ${
-              showFrame ? "text-green-500" : "text-red-500"
-            }`}
-          >
-            {showFrame ? "ACTIVE" : "WAITING"}
-          </span>
-  </div>
-</div>
-
-
-
-            
-            <div 
-              className="display-window relative h-40 rounded-b-lg mt-4 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
-              style={{
-                borderRadius: "0 0 12px 12px",
-                boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
-              }}
-            >
-              <div className="grid grid-cols-2 gap-3 p-3 h-full">
-                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                
+                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300 flex-1">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A4: Eclairs ({candyCounts.eclairs})
                   </div>
                   <div className="flex flex-wrap justify-center items-center h-full">
-                    {displayCandies.eclairs.map((candy, index) => (
+                    {displayCandies.eclairs.slice(0, 5).map((candy, index) => (
                       <div key={`display-eclairs-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                         <Candy 
                           candy={candy}
                           onEat={() => {}}
                           isDisplayOnly={true}
-                          containerWidth={100}
+                          containerWidth={90}
                           containerHeight={60}
                         />
                       </div>
@@ -891,18 +806,18 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
                 
-                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
+                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300 flex-1">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
-                    A5: Ferrero ({candyCounts.ferrero})
+                    A5: Ferrero Rocher ({candyCounts.ferrero})
                   </div>
                   <div className="flex flex-wrap justify-center items-center h-full">
-                    {displayCandies.ferrero.map((candy, index) => (
+                    {displayCandies.ferrero.slice(0, 5).map((candy, index) => (
                       <div key={`display-ferrero-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
                         <Candy 
                           candy={candy}
                           onEat={() => {}}
                           isDisplayOnly={true}
-                          containerWidth={100}
+                          containerWidth={90}
                           containerHeight={60}
                         />
                       </div>
@@ -944,153 +859,94 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
               </div>
-            </div>
-            
-            <div className="relative mx-auto w-3/4 h-8 bg-gray-700 rounded-t-lg mb-0 mt-4 flex justify-center items-center">
-              <div className="w-20 h-1 bg-black"></div>
-              {isDispensing && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-                  <div className="animate-bounce w-4 h-4 bg-amber-400 rounded-full opacity-75"></div>
-                </div>
-              )}
-            </div>
-            
-            <div className="relative mx-auto w-3/4 perspective">
-              <div 
-                ref={trayRef}
-                className="collector-tray relative h-24 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
-                style={{
-                  borderBottomRightRadius: "30px",
-                  borderBottomLeftRadius: "30px",
-                  boxShadow: "inset 0 5px 15px rgba(0,0,0,0.3)"
-                }}
-              >
-                <div className="absolute top-1 left-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-                  Collection Tray
+              
+              <div className="w-3/5 flex flex-col gap-4">
+                <div className="bg-black rounded-md p-3 h-[400px] overflow-hidden relative">
+                  <div ref={displayWindowRef} className="bg-gray-800 h-full w-full rounded overflow-y-auto p-4">
+                    <HistoryPanel history={history} totalScore={calculateTotalScore(history)} />
+                  </div>
                 </div>
                 
-                <button 
-                  onClick={handleCollectAll}
-                  className="absolute top-1 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors flex items-center gap-1 z-20 shadow-md"
-                  disabled={collectedCandies.length === 0}
-                >
-                  <ShoppingCart size={12} />
-                  Collect All
-                </button>
-                
-                <div className="relative h-full w-full">
-                  <AnimatePresence>
-                    {collectedCandies.map(candy => (
-                      <motion.div
-                        key={candy.id}
-                        initial={{ y: -50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      >
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-row gap-3">
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-white flex items-center justify-center gap-2 py-4"
+                      onClick={handleDispense}
+                      disabled={isDispensing || candyCounts.eclairs <= 0}
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center">
                         <Candy 
-                          key={candy.id}
+                          candy={{id: "btn-eclairs", type: "eclairs", x: 0, y: 0, rotation: 0}}
+                          onEat={() => {}}
+                          isDisplayOnly={true}
+                          containerWidth={24}
+                          containerHeight={24}
+                        />
+                      </div>
+                      <span>Dispense Eclairs</span>
+                    </Button>
+                    
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center gap-2 py-4"
+                      onClick={handleRefillAll}
+                      disabled={isDispensing}
+                    >
+                      <PackagePlus size={18} />
+                      <span>Refill All</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="flex flex-row gap-3 items-center">
+                    <div className="flex-1 flex flex-row items-center gap-2">
+                      <Input
+                        ref={scoreInputRef}
+                        type="number"
+                        placeholder="Enter score"
+                        min="1"
+                        className="flex-1"
+                      />
+                      <Button
+                        className="bg-gradient-to-r from-green-500 to-teal-500 text-white flex items-center justify-center gap-2 py-4"
+                        onClick={handleWinDrop}
+                        disabled={isDispensing}
+                      >
+                        <Trophy size={18} />
+                        <span>Drop</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  ref={trayRef}
+                  className="relative bg-gradient-to-b from-slate-600 to-slate-800 rounded-b-xl h-[140px] p-3 border-t-4 border-t-slate-600"
+                >
+                  <div className="absolute inset-[4px] bg-slate-700 rounded-lg overflow-hidden">
+                    {collectedCandies.map((candy) => (
+                      <div key={candy.id} className="absolute cursor-pointer transform transition-transform hover:scale-110" style={{ left: `${candy.x}px`, top: `${candy.y}px`, transform: `rotate(${candy.rotation}deg)` }}>
+                        <Candy 
                           candy={candy}
                           onEat={handleEatCandy}
-                          containerWidth={trayRef.current?.offsetWidth || 300}
-                          containerHeight={trayRef.current?.offsetHeight || 80}
+                          containerWidth={100}
+                          containerHeight={80}
                         />
-                      </motion.div>
+                      </div>
                     ))}
-                  </AnimatePresence>
+                  </div>
+                  
+                  {collectedCandies.length > 0 && (
+                    <Button 
+                      className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md"
+                      onClick={handleCollectAll}
+                    >
+                      <ShoppingCart size={14} className="mr-1" />
+                      Collect All
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
-
-            <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none">
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-400 to-transparent opacity-30"></div>
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-400 to-transparent opacity-30"></div>
-              <div className="absolute left-8 right-8 top-0 h-8 bg-gradient-to-b from-gray-400 to-transparent opacity-30"></div>
-              <div className="absolute left-8 right-8 bottom-0 h-8 bg-gradient-to-t from-gray-400 to-transparent opacity-30"></div>
-            </div>
           </div>
-          
-          <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-500 to-gray-300 opacity-80 rounded-l-3xl"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-500 to-gray-300 opacity-80 rounded-r-3xl"></div>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="w-full lg:w-80 space-y-6"
-        >
-          <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-6 shadow-md border border-gray-200">
-            <h2 className="text-xl font-semibold mb-2">Your Score</h2>
-            <div className="text-4xl font-bold text-blue-600">{score}</div>
-            <div className="text-sm text-gray-500 mt-2">
-              History Total: {calculateTotalScore(history)}
-            </div>
-          </div>
-          
-          <div className="bg-gray-800 p-4 rounded-md shadow-inner">
-            <div className="mb-3 flex justify-between items-center">
-              <div className="text-sm text-white font-semibold flex items-center gap-2">
-                <Zap size={16} className="text-yellow-400" />
-                OPERATION
-              </div>
-              <div className="w-8 h-4 bg-red-500 rounded-sm shadow-inner"></div>
-            </div>
-            
-            <Button
-              onClick={handleDispense}
-              className="w-full mb-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-2 border-green-700 shadow-lg flex items-center justify-center gap-2"
-              disabled={isDispensing || candyCounts.eclairs <= 0}
-            >
-              <div className="w-6 h-6 flex items-center justify-center">
-                <Candy 
-                  candy={{id: 'eclairs-button', type: 'eclairs', x: 0, y: 0, rotation: 0}}
-                  onEat={() => {}}
-                  isDisplayOnly={true}
-                  containerWidth={30}
-                  containerHeight={20}
-                />
-              </div>
-              Dispense Eclairs
-            </Button>
-            
-            <div className="mb-4 mt-4">
-              <div className="text-sm text-white font-semibold mb-2 flex items-center gap-2">
-                <Trophy size={14} className="text-yellow-400" />
-                WIN DROP
-              </div>
-              <div className="flex space-x-2">
-                <Input
-                  ref={scoreInputRef}
-                  type="number"
-                  min="1"
-                  placeholder="Enter score"
-                  className="flex-1 bg-gray-700 border-gray-600 text-white"
-                  disabled={isDispensing}
-                />
-                <Button
-                  onClick={handleWinDrop}
-                  variant="secondary"
-                  disabled={isDispensing}
-                  className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 border-2 border-indigo-700 shadow-lg text-white flex items-center gap-2"
-                >
-                  <Trophy size={16} className="text-yellow-200" />
-                  Drop
-                </Button>
-              </div>
-            </div>
-            
-            <Button
-              onClick={handleRefillAll}
-              className="w-full mt-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-2 border-blue-700 shadow-lg"
-              disabled={isDispensing}
-            >
-              <RefreshCw size={18} />
-              Refill All
-            </Button>
-          </div>
-          
-          <HistoryPanel history={history} />
         </motion.div>
       </div>
     </div>
