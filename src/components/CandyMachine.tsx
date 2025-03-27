@@ -783,7 +783,7 @@ const CandyMachine = () => {
               </div>
             </div>
             
-            <div className="relative mx-auto w-80 h-60 bg-gray-900 rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
+            <div className="relative mx-auto w-full h-80 bg-gray-900 rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
   {/* Outer Glow to Mimic LED Border */}
   <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
 
@@ -868,7 +868,7 @@ const CandyMachine = () => {
 src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/-1"
 
 
-width="100%"
+width="full"
 
 
 height="600"
