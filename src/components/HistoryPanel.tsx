@@ -44,6 +44,9 @@ const HistoryPanel = ({ history, className }: HistoryPanelProps) => {
     <div className={cn("bg-white bg-opacity-80 backdrop-blur-sm rounded-lg p-6 shadow-md", className)}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Candy History</h2>
+        <div className="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">
+          Total: {totalScore}
+        </div>
       </div>
       
       <div className="space-y-4">
@@ -53,13 +56,17 @@ const HistoryPanel = ({ history, className }: HistoryPanelProps) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="history-card"
+            className="bg-gray-50 rounded-lg p-3 shadow-sm border border-gray-100"
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
                 <div className={cn(
                   "w-4 h-4 rounded-full",
-                  `bg-candy-${type}`
+                  `bg-${type === 'fivestar' ? 'yellow-400' : 
+                    type === 'milkybar' ? 'yellow-100' :
+                    type === 'dairymilk' ? 'purple-700' :
+                    type === 'eclairs' ? 'amber-600' :
+                    'orange-400'}`
                 )}></div>
                 <h3 className="font-medium">{CANDY_DETAILS[type as keyof typeof CANDY_DETAILS].name}</h3>
               </div>
