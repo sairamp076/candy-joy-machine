@@ -4,15 +4,15 @@ import Button from './Button';
 import Candy from './Candy';
 import HistoryPanel from './HistoryPanel';
 import StockManagement from './StockManagement';
-import { 
-  Candy as CandyType, 
+import {
+  Candy as CandyType,
   CandyType as CandyTypeEnum,
   HistoryItem,
-  createCandy, 
-  getCandyCountForScore, 
-  generateCandies, 
+  createCandy,
+  getCandyCountForScore,
+  generateCandies,
   generateDisplayCandies,
-  playSound, 
+  playSound,
   CANDY_DETAILS,
   createEclairsCandy,
   calculateTotalScore
@@ -20,28 +20,28 @@ import {
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
-import { 
-  PackagePlus, 
-  Package, 
-  ShoppingCart, 
-  RefreshCw, 
-  Menu, 
-  Truck, 
-  User, 
+import {
+  PackagePlus,
+  Package,
+  ShoppingCart,
+  RefreshCw,
+  Menu,
+  Truck,
+  User,
   Store,
   Zap,
   Trophy
 } from 'lucide-react';
 import { toast } from "sonner";
-import { 
-  Sheet, 
-  SheetClose, 
-  SheetContent, 
-  SheetDescription, 
-  SheetFooter, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -59,7 +59,7 @@ const CandyMachine = () => {
     eclairs: CANDY_DETAILS.eclairs.defaultCount,
     ferrero: CANDY_DETAILS.ferrero.defaultCount
   });
-  
+
   const [stockLevels, setStockLevels] = useState<StockLevels>({
     vendingMachine: { ...candyCounts },
     floorManager: {
@@ -77,7 +77,7 @@ const CandyMachine = () => {
       ferrero: 50
     }
   });
-  
+
   const [displayCandies, setDisplayCandies] = useState<Record<CandyTypeEnum, CandyType[]>>({
     fivestar: [],
     milkybar: [],
@@ -90,10 +90,10 @@ const CandyMachine = () => {
   const [score, setScore] = useState<number>(0);
   const [isDispensing, setIsDispensing] = useState<boolean>(false);
   const [refillCount, setRefillCount] = useState<number>(5);
-  
+
   const displayWindowRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
-  
+
   const scoreInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -103,7 +103,7 @@ const CandyMachine = () => {
       vendingMachine: { ...candyCounts }
     }));
   }, []);
-  
+
   const initializeCandies = () => {
     const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
       fivestar: generateDisplayCandies(candyCounts.fivestar, 'fivestar'),
@@ -112,21 +112,21 @@ const CandyMachine = () => {
       eclairs: generateDisplayCandies(candyCounts.eclairs, 'eclairs'),
       ferrero: generateDisplayCandies(candyCounts.ferrero, 'ferrero')
     };
-    
+
     setDisplayCandies(newDisplayCandies);
   };
 
   const handleDispense = () => {
     if (isDispensing || candyCounts.eclairs <= 0) return;
-    
+
     setIsDispensing(true);
     playSound('button');
-    
+
     setCandyCounts(prev => ({
       ...prev,
       eclairs: prev.eclairs - 1
     }));
-    
+
     setStockLevels(prev => ({
       ...prev,
       vendingMachine: {
@@ -134,53 +134,53 @@ const CandyMachine = () => {
         eclairs: prev.vendingMachine.eclairs - 1
       }
     }));
-    
+
     setDisplayCandies(prev => ({
       ...prev,
       eclairs: generateDisplayCandies(candyCounts.eclairs - 1, 'eclairs')
     }));
-    
+
     setTimeout(() => {
       const trayWidth = trayRef.current?.offsetWidth || 300;
       const trayHeight = trayRef.current?.offsetHeight || 120;
-      
+
       const newCandy = createEclairsCandy(trayWidth - 40, trayHeight / 2 - 20);
-      
+
       setCollectedCandies(prev => [...prev, newCandy]);
       playSound('drop');
-      
+
       setIsDispensing(false);
     }, 300);
   };
 
   const handleRefillAll = () => {
     if (isDispensing) return;
-    
+
     const canRefill = Object.keys(candyCounts).every(
       type => stockLevels.floorManager[type as CandyTypeEnum] >= (CANDY_DETAILS[type as CandyTypeEnum].defaultCount - candyCounts[type as CandyTypeEnum])
     );
-    
+
     if (!canRefill) {
       toast.error("Floor manager doesn't have enough stock for complete refill");
       return;
     }
-    
+
     playSound('button');
     toast.success("All compartments refilled!");
-    
+
     const stockNeeded: Record<CandyTypeEnum, number> = {} as Record<CandyTypeEnum, number>;
     Object.keys(candyCounts).forEach(type => {
       const candyType = type as CandyTypeEnum;
       stockNeeded[candyType] = CANDY_DETAILS[candyType].defaultCount - candyCounts[candyType];
     });
-    
+
     setStockLevels(prev => {
       const newFloorManagerStock = { ...prev.floorManager };
       Object.keys(stockNeeded).forEach(type => {
         const candyType = type as CandyTypeEnum;
         newFloorManagerStock[candyType] -= stockNeeded[candyType];
       });
-      
+
       return {
         ...prev,
         floorManager: newFloorManagerStock,
@@ -193,7 +193,7 @@ const CandyMachine = () => {
         }
       };
     });
-    
+
     setCandyCounts({
       fivestar: CANDY_DETAILS.fivestar.defaultCount,
       milkybar: CANDY_DETAILS.milkybar.defaultCount,
@@ -201,7 +201,7 @@ const CandyMachine = () => {
       eclairs: CANDY_DETAILS.eclairs.defaultCount,
       ferrero: CANDY_DETAILS.ferrero.defaultCount
     });
-    
+
     const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
       fivestar: generateDisplayCandies(CANDY_DETAILS.fivestar.defaultCount, 'fivestar'),
       milkybar: generateDisplayCandies(CANDY_DETAILS.milkybar.defaultCount, 'milkybar'),
@@ -209,63 +209,63 @@ const CandyMachine = () => {
       eclairs: generateDisplayCandies(CANDY_DETAILS.eclairs.defaultCount, 'eclairs'),
       ferrero: generateDisplayCandies(CANDY_DETAILS.ferrero.defaultCount, 'ferrero')
     };
-    
+
     setDisplayCandies(newDisplayCandies);
   };
 
-  
- 
+
+
 
   const [showFrame, setShowFrame] = useState(false);
- 
+
 
   const [email, setEmail] = useState("");
- 
+
   const handleSubmit = (e) => {
- 
+
 
     e.preventDefault();
- 
+
 
     if (email) {
- 
+
 
       setShowFrame(true);
- 
+
 
     }
- 
+
 
   };
 
 
   const handleRefillCompartment = (type: CandyTypeEnum) => {
     if (isDispensing) return;
-    
+
     const currentCount = candyCounts[type];
     const maxCount = CANDY_DETAILS[type].defaultCount;
-    
+
     if (currentCount >= maxCount) {
       toast.error(`${CANDY_DETAILS[type].name} compartment is already full!`);
       return;
     }
-    
+
     const refillAmount = Math.min(refillCount, maxCount - currentCount);
-    
+
     if (stockLevels.floorManager[type] < refillAmount) {
       toast.error(`Floor manager doesn't have enough ${CANDY_DETAILS[type].name} stock!`);
       return;
     }
-    
+
     playSound('button');
-    
+
     const newCount = currentCount + refillAmount;
-    
+
     setCandyCounts(prev => ({
       ...prev,
       [type]: newCount
     }));
-    
+
     setStockLevels(prev => ({
       ...prev,
       floorManager: {
@@ -277,9 +277,9 @@ const CandyMachine = () => {
         [type]: newCount
       }
     }));
-    
+
     toast.success(`${CANDY_DETAILS[type].name} compartment refilled to ${newCount}!`);
-    
+
     setDisplayCandies(prev => ({
       ...prev,
       [type]: generateDisplayCandies(newCount, type)
@@ -291,7 +291,7 @@ const CandyMachine = () => {
       toast.error(`Vendor doesn't have enough ${CANDY_DETAILS[type].name} stock!`);
       return;
     }
-    
+
     setStockLevels(prev => ({
       ...prev,
       vendor: {
@@ -303,84 +303,84 @@ const CandyMachine = () => {
         [type]: prev.floorManager[type] + amount
       }
     }));
-    
+
     toast.success(`Floor manager received ${amount} ${CANDY_DETAILS[type].name} from vendor!`);
   };
 
   const handleCollectAll = () => {
     if (collectedCandies.length === 0) return;
-    
+
     const now = new Date();
-    
+
     collectedCandies.forEach(candy => {
       const candyScore = CANDY_DETAILS[candy.type].baseScore;
-      
+
       const historyItem: HistoryItem = {
         id: candy.id,
         type: candy.type,
         timestamp: now,
         score: candyScore
       };
-      
+
       setHistory(prev => [historyItem, ...prev]);
     });
-    
+
     toast.success(`Collected ${collectedCandies.length} candies!`);
-    
+
     setCollectedCandies([]);
   };
 
   const handleWinDrop = () => {
     if (isDispensing) return;
-    
+
     const userScore = parseInt(scoreInputRef.current?.value || "0", 10);
     if (isNaN(userScore) || userScore <= 0) {
       toast.error("Please enter a valid score!");
       return;
     }
-    
+
     setIsDispensing(true);
     playSound('button');
-    
+
     const candyCount = getCandyCountForScore(userScore);
     const trayWidth = trayRef.current?.offsetWidth || 300;
     const trayHeight = trayRef.current?.offsetHeight || 120;
-    
+
     setScore(prevScore => prevScore + userScore);
-    
+
     let droppedCount = 0;
     let remainingTypes: CandyTypeEnum[] = (Object.keys(candyCounts) as CandyTypeEnum[]).filter(
       type => candyCounts[type] > 0
     );
-    
+
     if (remainingTypes.length === 0) {
       setIsDispensing(false);
       toast.error("No candies left to dispense!");
       return;
     }
-    
+
     toast.success(`Dropping ${candyCount} candies based on score: ${userScore}!`);
-    
+
     const dropInterval = setInterval(() => {
       if (droppedCount >= candyCount || remainingTypes.length === 0) {
         clearInterval(dropInterval);
         setIsDispensing(false);
         return;
       }
-      
+
       const randomTypeIndex = Math.floor(Math.random() * remainingTypes.length);
       const selectedType = remainingTypes[randomTypeIndex];
-      
+
       if (candyCounts[selectedType] <= 0) {
         remainingTypes = remainingTypes.filter(type => type !== selectedType);
         return;
       }
-      
+
       setCandyCounts(prev => ({
         ...prev,
         [selectedType]: prev[selectedType] - 1
       }));
-      
+
       setStockLevels(prev => ({
         ...prev,
         vendingMachine: {
@@ -388,37 +388,37 @@ const CandyMachine = () => {
           [selectedType]: prev.vendingMachine[selectedType] - 1
         }
       }));
-      
+
       setDisplayCandies(prev => ({
         ...prev,
         [selectedType]: generateDisplayCandies(candyCounts[selectedType] - 1, selectedType)
       }));
-      
+
       const newCandy = createCandy(selectedType, trayWidth - 40, trayHeight / 2 - 20);
-      
+
       setCollectedCandies(prev => [...prev, newCandy]);
       playSound('drop');
-      
+
       droppedCount++;
     }, 200);
   };
 
   const handleEatCandy = (id: string) => {
     const eatenCandy = collectedCandies.find(candy => candy.id === id);
-    
+
     if (eatenCandy) {
       const candyScore = CANDY_DETAILS[eatenCandy.type].baseScore;
-      
+
       const historyItem: HistoryItem = {
         id: eatenCandy.id,
         type: eatenCandy.type,
         timestamp: new Date(),
         score: candyScore
       };
-      
+
       setHistory(prev => [historyItem, ...prev]);
       toast.success(`Enjoyed a ${CANDY_DETAILS[eatenCandy.type].name}! +${candyScore} points`);
-      
+
       setCollectedCandies(prev => prev.filter(candy => candy.id !== id));
     }
   };
@@ -426,7 +426,7 @@ const CandyMachine = () => {
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-center gap-6 p-2 md:p-4">
       <div className="w-full flex flex-col lg:flex-row items-center justify-center gap-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -450,7 +450,7 @@ const CandyMachine = () => {
                     Monitor and manage inventory levels
                   </SheetDescription>
                 </SheetHeader>
-                
+
                 <div className="py-6">
                   <Tabs defaultValue="machine" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
@@ -467,7 +467,7 @@ const CandyMachine = () => {
                         <span>Vendor Stock</span>
                       </TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="machine" className="space-y-4 mt-4">
                       <div className="bg-gray-100 p-4 rounded-lg">
                         <h3 className="font-semibold text-lg mb-4">Vending Machine Inventory</h3>
@@ -476,9 +476,9 @@ const CandyMachine = () => {
                             <div key={`machine-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
                               <div className="flex items-center gap-3">
                                 <div className="w-12 h-8 flex items-center justify-center">
-                                  <Candy 
-                                    candy={{id: `stock-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0}}
-                                    onEat={() => {}}
+                                  <Candy
+                                    candy={{ id: `stock-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0 }}
+                                    onEat={() => { }}
                                     isDisplayOnly={true}
                                     containerWidth={50}
                                     containerHeight={30}
@@ -496,7 +496,7 @@ const CandyMachine = () => {
                         </div>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="floor" className="space-y-4 mt-4">
                       <div className="bg-gray-100 p-4 rounded-lg">
                         <h3 className="font-semibold text-lg mb-4">Floor Manager Inventory</h3>
@@ -505,9 +505,9 @@ const CandyMachine = () => {
                             <div key={`floor-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
                               <div className="flex items-center gap-3">
                                 <div className="w-12 h-8 flex items-center justify-center">
-                                  <Candy 
-                                    candy={{id: `floor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0}}
-                                    onEat={() => {}}
+                                  <Candy
+                                    candy={{ id: `floor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0 }}
+                                    onEat={() => { }}
                                     isDisplayOnly={true}
                                     containerWidth={50}
                                     containerHeight={30}
@@ -530,12 +530,12 @@ const CandyMachine = () => {
                                       <AlertDialogTitle>Request Stock from Vendor</AlertDialogTitle>
                                       <AlertDialogDescription>
                                         How many {CANDY_DETAILS[type as CandyTypeEnum].name} would you like to request?
-                                        <Input 
-                                          type="number" 
-                                          min="1" 
-                                          max="20" 
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="20"
                                           defaultValue="10"
-                                          className="mt-2" 
+                                          className="mt-2"
                                           id={`request-${type}`}
                                         />
                                       </AlertDialogDescription>
@@ -558,7 +558,7 @@ const CandyMachine = () => {
                         </div>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="vendor" className="space-y-4 mt-4">
                       <div className="bg-gray-100 p-4 rounded-lg">
                         <h3 className="font-semibold text-lg mb-4">Vendor Warehouse Inventory</h3>
@@ -567,9 +567,9 @@ const CandyMachine = () => {
                             <div key={`vendor-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
                               <div className="flex items-center gap-3">
                                 <div className="w-12 h-8 flex items-center justify-center">
-                                  <Candy 
-                                    candy={{id: `vendor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0}}
-                                    onEat={() => {}}
+                                  <Candy
+                                    candy={{ id: `vendor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0 }}
+                                    onEat={() => { }}
                                     isDisplayOnly={true}
                                     containerWidth={50}
                                     containerHeight={30}
@@ -589,12 +589,12 @@ const CandyMachine = () => {
                     </TabsContent>
                   </Tabs>
                 </div>
-                
+
                 <SheetFooter>
                   <SheetClose asChild>
-                    <Button 
+                    <Button
                       className="w-full"
-                      onClick={() => {}}
+                      onClick={() => { }}
                     >
                       Close
                     </Button>
@@ -603,15 +603,15 @@ const CandyMachine = () => {
               </SheetContent>
             </Sheet>
           </div>
-          
+
           <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 rounded-t-md border-b-4 border-gray-600">
             <h1 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md tracking-wider">CANDY HUB</h1>
             <p className="text-sm text-center text-gray-100">Premium Candy Vending</p>
           </div>
-          
+
           <div className="relative p-4 md:p-6 bg-gradient-to-b from-gray-200 to-gray-300 rounded-xl">
-            
-            <div 
+
+            <div
               ref={displayWindowRef}
               className="display-window relative h-40 rounded-t-lg mb-4 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
@@ -620,7 +620,7 @@ const CandyMachine = () => {
               }}
             >
               <div className="absolute top-0 left-0 right-0 h-12 bg-white opacity-20 transform skew-y-3"></div>
-              
+
               <div className="grid grid-cols-3 gap-3 p-3 h-full">
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
@@ -629,9 +629,9 @@ const CandyMachine = () => {
                   <div className="flex flex-wrap justify-center items-center h-full">
                     {displayCandies.fivestar.map((candy, index) => (
                       <div key={`display-fivestar-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
-                        <Candy 
+                        <Candy
                           candy={candy}
-                          onEat={() => {}}
+                          onEat={() => { }}
                           isDisplayOnly={true}
                           containerWidth={100}
                           containerHeight={60}
@@ -651,11 +651,11 @@ const CandyMachine = () => {
                         <AlertDialogTitle>Refill 5 Star Compartment</AlertDialogTitle>
                         <AlertDialogDescription>
                           Enter the number of candies to add:
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="10" 
-                            className="mt-2" 
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className="mt-2"
                             value={refillCount}
                             onChange={(e) => setRefillCount(Number(e.target.value))}
                           />
@@ -674,7 +674,7 @@ const CandyMachine = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                
+
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A2: Milkybar ({candyCounts.milkybar})
@@ -682,9 +682,9 @@ const CandyMachine = () => {
                   <div className="flex flex-wrap justify-center items-center h-full">
                     {displayCandies.milkybar.map((candy, index) => (
                       <div key={`display-milkybar-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
-                        <Candy 
+                        <Candy
                           candy={candy}
-                          onEat={() => {}}
+                          onEat={() => { }}
                           isDisplayOnly={true}
                           containerWidth={100}
                           containerHeight={60}
@@ -704,11 +704,11 @@ const CandyMachine = () => {
                         <AlertDialogTitle>Refill Milkybar Compartment</AlertDialogTitle>
                         <AlertDialogDescription>
                           Enter the number of candies to add:
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="10" 
-                            className="mt-2" 
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className="mt-2"
                             value={refillCount}
                             onChange={(e) => setRefillCount(Number(e.target.value))}
                           />
@@ -727,7 +727,7 @@ const CandyMachine = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                
+
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A3: Dairy Milk ({candyCounts.dairymilk})
@@ -735,9 +735,9 @@ const CandyMachine = () => {
                   <div className="flex flex-wrap justify-center items-center h-full">
                     {displayCandies.dairymilk.map((candy, index) => (
                       <div key={`display-dairymilk-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
-                        <Candy 
+                        <Candy
                           candy={candy}
-                          onEat={() => {}}
+                          onEat={() => { }}
                           isDisplayOnly={true}
                           containerWidth={100}
                           containerHeight={60}
@@ -757,11 +757,11 @@ const CandyMachine = () => {
                         <AlertDialogTitle>Refill Dairy Milk Compartment</AlertDialogTitle>
                         <AlertDialogDescription>
                           Enter the number of candies to add:
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="10" 
-                            className="mt-2" 
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className="mt-2"
                             value={refillCount}
                             onChange={(e) => setRefillCount(Number(e.target.value))}
                           />
@@ -782,7 +782,6 @@ const CandyMachine = () => {
                 </div>
               </div>
             </div>
-            
             <div className="relative mx-auto w-full h-80 bg-gray-900 rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
   {/* Outer Glow to Mimic LED Border */}
   <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
@@ -792,110 +791,58 @@ const CandyMachine = () => {
 
   {/* Full-Screen Website within the Frame */}
   <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
-  {!showFrame ? (
+    {!showFrame ? (
+      <div className="flex flex-col items-center justify-center h-full bg-gray-800">
+        <h2 className="text-lg font-semibold text-white mb-4">
+          Get Started
+        </h2>
 
- 
-
-<div className="flex flex-col items-center justify-center h-full bg-gray-800">
-
-
-  <h2 className="text-lg font-semibold text-white mb-4">
-
-
-    Get Started
-
-
-  </h2>
-
-
-  <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
-
-
-    <input
-
-
-      type="email"
-
-
-      value={email}
-
-
-      onChange={(e) => setEmail(e.target.value)}
-
-
-      required
-
-
-      placeholder="Enter your email"
-
-
-      className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-
-
-    />
-
-
-    <button
-
-
-      type="submit"
-
-
-      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
-
-
-    >
-
-
-      Get Started
-
-
-    </button>
-
-
-  </form>
-
-
-</div>
-
-
-) : (
-
-
-<iframe
-
-
-src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/-1"
-
-
-width="full"
-
-
-height="600"
-
-
-frameborder="0"
-
-
-sandbox="allow-scripts allow-same-origin"
-
-
-></iframe>
-
-
-)}
+        <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="Enter your email"
+            className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
+          >
+            Get Started
+          </button>
+        </form>
+      </div>
+    ) : (
+      <div className="w-full h-full overflow-hidden">
+        <iframe
+          src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/-1"
+          className="w-full h-full"
+          style={{
+            transform: "scale(0.9)", // Zooms out to 90%
+            transformOrigin: "top left",
+            width: "111%",
+            height: "111%",
+            border: "none",
+          }}
+          sandbox="allow-scripts allow-same-origin"
+        ></iframe>
+      </div>
+    )}
   </div>
 
-  {/* Bottom LED Indicator */}
-  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-    <span className="text-[10px] text-green-500">ACTIVE</span>
-  </div>
-</div>
+
+              {/* Bottom LED Indicator */}
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] text-green-500">ACTIVE</span>
+              </div>
+            </div>
 
 
-            
-            <div 
+
+            <div
               className="display-window relative h-40 rounded-b-lg mt-4 overflow-hidden border-8 border-t-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
                 borderRadius: "0 0 12px 12px",
@@ -910,9 +857,9 @@ sandbox="allow-scripts allow-same-origin"
                   <div className="flex flex-wrap justify-center items-center h-full">
                     {displayCandies.eclairs.map((candy, index) => (
                       <div key={`display-eclairs-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
-                        <Candy 
+                        <Candy
                           candy={candy}
-                          onEat={() => {}}
+                          onEat={() => { }}
                           isDisplayOnly={true}
                           containerWidth={100}
                           containerHeight={60}
@@ -932,11 +879,11 @@ sandbox="allow-scripts allow-same-origin"
                         <AlertDialogTitle>Refill Eclairs Compartment</AlertDialogTitle>
                         <AlertDialogDescription>
                           Enter the number of candies to add:
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="10" 
-                            className="mt-2" 
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className="mt-2"
                             value={refillCount}
                             onChange={(e) => setRefillCount(Number(e.target.value))}
                           />
@@ -955,7 +902,7 @@ sandbox="allow-scripts allow-same-origin"
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                
+
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A5: Ferrero ({candyCounts.ferrero})
@@ -963,9 +910,9 @@ sandbox="allow-scripts allow-same-origin"
                   <div className="flex flex-wrap justify-center items-center h-full">
                     {displayCandies.ferrero.map((candy, index) => (
                       <div key={`display-ferrero-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
-                        <Candy 
+                        <Candy
                           candy={candy}
-                          onEat={() => {}}
+                          onEat={() => { }}
                           isDisplayOnly={true}
                           containerWidth={100}
                           containerHeight={60}
@@ -985,11 +932,11 @@ sandbox="allow-scripts allow-same-origin"
                         <AlertDialogTitle>Refill Ferrero Rocher Compartment</AlertDialogTitle>
                         <AlertDialogDescription>
                           Enter the number of candies to add:
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="10" 
-                            className="mt-2" 
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className="mt-2"
                             value={refillCount}
                             onChange={(e) => setRefillCount(Number(e.target.value))}
                           />
@@ -1010,7 +957,7 @@ sandbox="allow-scripts allow-same-origin"
                 </div>
               </div>
             </div>
-            
+
             <div className="relative mx-auto w-3/4 h-8 bg-gray-700 rounded-t-lg mb-0 mt-4 flex justify-center items-center">
               <div className="w-20 h-1 bg-black"></div>
               {isDispensing && (
@@ -1019,9 +966,9 @@ sandbox="allow-scripts allow-same-origin"
                 </div>
               )}
             </div>
-            
+
             <div className="relative mx-auto w-3/4 perspective">
-              <div 
+              <div
                 ref={trayRef}
                 className="collector-tray relative h-24 rounded-b-xl overflow-hidden border-4 border-t-0 border-gray-700 bg-gray-800 shadow-inner"
                 style={{
@@ -1033,8 +980,8 @@ sandbox="allow-scripts allow-same-origin"
                 <div className="absolute top-1 left-2 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
                   Collection Tray
                 </div>
-                
-                <button 
+
+                <button
                   onClick={handleCollectAll}
                   className="absolute top-1 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition-colors flex items-center gap-1 z-20 shadow-md"
                   disabled={collectedCandies.length === 0}
@@ -1042,7 +989,7 @@ sandbox="allow-scripts allow-same-origin"
                   <ShoppingCart size={12} />
                   Collect All
                 </button>
-                
+
                 <div className="relative h-full w-full">
                   <AnimatePresence>
                     {collectedCandies.map(candy => (
@@ -1053,7 +1000,7 @@ sandbox="allow-scripts allow-same-origin"
                         exit={{ scale: 0, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                       >
-                        <Candy 
+                        <Candy
                           key={candy.id}
                           candy={candy}
                           onEat={handleEatCandy}
@@ -1074,12 +1021,12 @@ sandbox="allow-scripts allow-same-origin"
               <div className="absolute left-8 right-8 bottom-0 h-8 bg-gradient-to-t from-gray-400 to-transparent opacity-30"></div>
             </div>
           </div>
-          
+
           <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-500 to-gray-300 opacity-80 rounded-l-3xl"></div>
           <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-500 to-gray-300 opacity-80 rounded-r-3xl"></div>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -1092,7 +1039,7 @@ sandbox="allow-scripts allow-same-origin"
               History Total: {calculateTotalScore(history)}
             </div>
           </div>
-          
+
           <div className="bg-gray-800 p-4 rounded-md shadow-inner">
             <div className="mb-3 flex justify-between items-center">
               <div className="text-sm text-white font-semibold flex items-center gap-2">
@@ -1101,16 +1048,16 @@ sandbox="allow-scripts allow-same-origin"
               </div>
               <div className="w-8 h-4 bg-red-500 rounded-sm shadow-inner"></div>
             </div>
-            
+
             <Button
               onClick={handleDispense}
               className="w-full mb-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-2 border-green-700 shadow-lg flex items-center justify-center gap-2"
               disabled={isDispensing || candyCounts.eclairs <= 0}
             >
               <div className="w-6 h-6 flex items-center justify-center">
-                <Candy 
-                  candy={{id: 'eclairs-button', type: 'eclairs', x: 0, y: 0, rotation: 0}}
-                  onEat={() => {}}
+                <Candy
+                  candy={{ id: 'eclairs-button', type: 'eclairs', x: 0, y: 0, rotation: 0 }}
+                  onEat={() => { }}
                   isDisplayOnly={true}
                   containerWidth={30}
                   containerHeight={20}
@@ -1118,7 +1065,7 @@ sandbox="allow-scripts allow-same-origin"
               </div>
               Dispense Eclairs
             </Button>
-            
+
             <div className="mb-4 mt-4">
               <div className="text-sm text-white font-semibold mb-2 flex items-center gap-2">
                 <Trophy size={14} className="text-yellow-400" />
@@ -1144,7 +1091,7 @@ sandbox="allow-scripts allow-same-origin"
                 </Button>
               </div>
             </div>
-            
+
             <Button
               onClick={handleRefillAll}
               className="w-full mt-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-2 border-blue-700 shadow-lg"
@@ -1154,7 +1101,7 @@ sandbox="allow-scripts allow-same-origin"
               Refill All
             </Button>
           </div>
-          
+
           <HistoryPanel history={history} />
         </motion.div>
       </div>
