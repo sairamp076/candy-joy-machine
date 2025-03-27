@@ -213,6 +213,32 @@ const CandyMachine = () => {
     setDisplayCandies(newDisplayCandies);
   };
 
+  
+ 
+
+  const [showFrame, setShowFrame] = useState(false);
+ 
+
+  const [email, setEmail] = useState("");
+ 
+  const handleSubmit = (e) => {
+ 
+
+    e.preventDefault();
+ 
+
+    if (email) {
+ 
+
+      setShowFrame(true);
+ 
+
+    }
+ 
+
+  };
+
+
   const handleRefillCompartment = (type: CandyTypeEnum) => {
     if (isDispensing) return;
     
@@ -766,13 +792,98 @@ const CandyMachine = () => {
 
   {/* Full-Screen Website within the Frame */}
   <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
-    <iframe
-      src="https://lovable.dev"
-      title="Lovable Website"
-      className="w-full h-full border-0"
-      loading="lazy"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    ></iframe>
+  {!showFrame ? (
+
+ 
+
+<div className="flex flex-col items-center justify-center h-full bg-gray-800">
+
+
+  <h2 className="text-lg font-semibold text-white mb-4">
+
+
+    Get Started
+
+
+  </h2>
+
+
+  <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
+
+
+    <input
+
+
+      type="email"
+
+
+      value={email}
+
+
+      onChange={(e) => setEmail(e.target.value)}
+
+
+      required
+
+
+      placeholder="Enter your email"
+
+
+      className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+
+    />
+
+
+    <button
+
+
+      type="submit"
+
+
+      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
+
+
+    >
+
+
+      Get Started
+
+
+    </button>
+
+
+  </form>
+
+
+</div>
+
+
+) : (
+
+
+<iframe
+
+
+src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/-1"
+
+
+width="100%"
+
+
+height="600"
+
+
+frameborder="0"
+
+
+sandbox="allow-scripts allow-same-origin"
+
+
+></iframe>
+
+
+)}
   </div>
 
   {/* Bottom LED Indicator */}
