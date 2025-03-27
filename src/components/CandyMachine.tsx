@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -512,6 +513,12 @@ const CandyMachine = () => {
                                           className="mt-2" 
                                           id={`request-${type}`}
                                         />
+                                        <div className="mt-2 text-sm">
+                                          Current floor stock: {count}
+                                        </div>
+                                        <div className="mt-1 text-sm">
+                                          Available from vendor: {stockLevels.vendor[type as CandyTypeEnum]}
+                                        </div>
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -777,4 +784,173 @@ const CandyMachine = () => {
                           Enter the number of candies to add:
                           <Input 
                             type="number" 
-                            min="1"
+                            min="1" 
+                            max="10" 
+                            className="mt-2" 
+                            value={refillCount}
+                            onChange={(e) => setRefillCount(Number(e.target.value))}
+                          />
+                          <div className="mt-2 text-sm">
+                            Current: {candyCounts.eclairs} / {CANDY_DETAILS.eclairs.defaultCount}
+                          </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.eclairs}
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleRefillCompartment('eclairs')}>Refill</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+                
+                <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300 flex-1">
+                  <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
+                    A5: Ferrero Rocher ({candyCounts.ferrero})
+                  </div>
+                  <div className="flex flex-wrap justify-center items-center h-full">
+                    {displayCandies.ferrero.slice(0, 5).map((candy, index) => (
+                      <div key={`display-ferrero-${index}`} className="m-1" style={{ transform: `rotate(${index * 15}deg)` }}>
+                        <Candy 
+                          candy={candy}
+                          onEat={() => {}}
+                          isDisplayOnly={true}
+                          containerWidth={90}
+                          containerHeight={60}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
+                        <RefreshCw size={12} />
+                        Refill
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Refill Ferrero Rocher Compartment</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Enter the number of candies to add:
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            max="10" 
+                            className="mt-2" 
+                            value={refillCount}
+                            onChange={(e) => setRefillCount(Number(e.target.value))}
+                          />
+                          <div className="mt-2 text-sm">
+                            Current: {candyCounts.ferrero} / {CANDY_DETAILS.ferrero.defaultCount}
+                          </div>
+                          <div className="mt-1 text-sm">
+                            Floor Stock: {stockLevels.floorManager.ferrero}
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleRefillCompartment('ferrero')}>Refill</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+              
+              <div className="w-3/5 flex flex-col gap-4">
+                <div className="bg-black rounded-md p-3 h-[400px] overflow-hidden relative">
+                  <div ref={displayWindowRef} className="bg-gray-800 h-full w-full rounded overflow-y-auto p-4">
+                    <HistoryPanel history={history} totalScore={calculateTotalScore(history)} />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-row gap-3">
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-white flex items-center justify-center gap-2 py-4"
+                      onClick={handleDispense}
+                      disabled={isDispensing || candyCounts.eclairs <= 0}
+                    >
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        <Candy 
+                          candy={{id: "btn-eclairs", type: "eclairs", x: 0, y: 0, rotation: 0}}
+                          onEat={() => {}}
+                          isDisplayOnly={true}
+                          containerWidth={24}
+                          containerHeight={24}
+                        />
+                      </div>
+                      <span>Dispense Eclairs</span>
+                    </Button>
+                    
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center gap-2 py-4"
+                      onClick={handleRefillAll}
+                      disabled={isDispensing}
+                    >
+                      <PackagePlus size={18} />
+                      <span>Refill All</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="flex flex-row gap-3 items-center">
+                    <div className="flex-1 flex flex-row items-center gap-2">
+                      <Input
+                        ref={scoreInputRef}
+                        type="number"
+                        placeholder="Enter score"
+                        min="1"
+                        className="flex-1"
+                      />
+                      <Button
+                        className="bg-gradient-to-r from-green-500 to-teal-500 text-white flex items-center justify-center gap-2 py-4"
+                        onClick={handleWinDrop}
+                        disabled={isDispensing}
+                      >
+                        <Trophy size={18} />
+                        <span>Drop</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  ref={trayRef}
+                  className="relative bg-gradient-to-b from-slate-600 to-slate-800 rounded-b-xl h-[140px] p-3 border-t-4 border-t-slate-600"
+                >
+                  <div className="absolute inset-[4px] bg-slate-700 rounded-lg overflow-hidden">
+                    {collectedCandies.map((candy) => (
+                      <div key={candy.id} className="absolute cursor-pointer transform transition-transform hover:scale-110" style={{ left: `${candy.x}px`, top: `${candy.y}px`, transform: `rotate(${candy.rotation}deg)` }}>
+                        <Candy 
+                          candy={candy}
+                          onEat={handleEatCandy}
+                          containerWidth={100}
+                          containerHeight={80}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {collectedCandies.length > 0 && (
+                    <Button 
+                      className="absolute bottom-2 right-2 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md"
+                      onClick={handleCollectAll}
+                    >
+                      <ShoppingCart size={14} className="mr-1" />
+                      Collect All
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default CandyMachine;
