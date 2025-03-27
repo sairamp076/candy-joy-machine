@@ -290,14 +290,14 @@ const CandyMachine = () => {
         }
 
         const pollData = await pollResponse.json();
-        const score = pollData.result?.score;
+        const newScore = pollData.result?.score;
 
-        if (score && score !== "") {
+        if (newScore && newScore !== "") {
           clearInterval(pollInterval);
           setScoreFound(true);
           setShowFrame(true);
-          setScore(score)
-          handleWinDrop(score)
+          setScore(newScore)
+          handleWinDrop(newScore)
           console.log("Score received:", score);
         }
       } catch (error) {
@@ -416,8 +416,6 @@ const CandyMachine = () => {
     const candyCount = getCandyCountForScore(userScore);
     const trayWidth = trayRef.current?.offsetWidth || 300;
     const trayHeight = trayRef.current?.offsetHeight || 120;
-
-    setScore(prevScore => prevScore + userScore);
 
     let droppedCount = 0;
     let remainingTypes: CandyTypeEnum[] = (Object.keys(candyCounts) as CandyTypeEnum[]).filter(
@@ -684,7 +682,7 @@ const CandyMachine = () => {
 
             <div
               ref={displayWindowRef}
-              className="display-window relative h-40 rounded-t-lg mb-4 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
+              className="display-window relative h-50 rounded-t-lg mb-4 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
               style={{
                 borderRadius: "12px 12px 0 0",
                 boxShadow: "inset 0 0 20px rgba(0,0,0,0.2)"
