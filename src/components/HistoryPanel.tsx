@@ -60,13 +60,14 @@ const HistoryPanel = ({ history, className }: HistoryPanelProps) => {
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <div className={`w-4 h-4 rounded-full ${
-                  type === 'fivestar' ? 'bg-yellow-400' : 
-                  type === 'milkybar' ? 'bg-yellow-100' :
-                  type === 'dairymilk' ? 'bg-purple-700' :
-                  type === 'eclairs' ? 'bg-amber-600' :
-                  'bg-orange-400'
-                }`}></div>
+                <div className={cn(
+                  "w-4 h-4 rounded-full",
+                  `bg-${type === 'fivestar' ? 'yellow-400' : 
+                    type === 'milkybar' ? 'yellow-100' :
+                    type === 'dairymilk' ? 'purple-700' :
+                    type === 'eclairs' ? 'amber-600' :
+                    'orange-400'}`
+                )}></div>
                 <h3 className="font-medium">{CANDY_DETAILS[type as keyof typeof CANDY_DETAILS].name}</h3>
               </div>
               <div className="text-sm font-medium bg-gray-100 px-2 py-1 rounded">
