@@ -216,26 +216,50 @@ const CandyMachine = () => {
 
 
 
-  const [showFrame, setShowFrame] = useState(false);
-
-
   const [email, setEmail] = useState("");
+  const [showFrame, setShowFrame] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [iframeUrl, setIframeUrl] = useState("");
 
-  const handleSubmit = (e) => {
-
-
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      const response = await fetch(
+        "https://hackai.service-now.com/api/snc/candyauthenticator",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie:
+              "BIGipServerpool_hackai=c4a53b71e722863906d11e0d6380e527; JSESSIONID=C6E94718F99E49F0FD32C9F243D0F038; glide_node_id_for_js=bc3e6ce5848075e1326798b0a2a05f7cb0f8e60809cf43ad618319fb4009edab; glide_user_route=glide.f0de4775f7e89ad60bb51e4d6c3d0ba6",
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
 
+      if (!response.ok) {
+        throw new Error("API request failed");
+      }
 
-    if (email) {
+      const data = await response.json();
+      const sysId = data.result?.sys_id;
 
-
-      setShowFrame(true);
-
-
+      if (sysId) {
+        const updatedUrl = `https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/${sysId}`;
+        setIframeUrl(updatedUrl);
+        setShowFrame(true);
+        setErrorMessage("");
+      } else {
+        setErrorMessage("Failed to connect. Please try again.");
+        setShowFrame(false);
+      }
+    } catch (error) {
+      console.error("API error:", error);
+      setErrorMessage("Failed to connect. Please try again.");
+      setShowFrame(false);
     }
-
-
   };
 
 
@@ -791,54 +815,59 @@ const CandyMachine = () => {
 
   {/* Full-Screen Website within the Frame */}
   <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
-    {!showFrame ? (
-      <div className="flex flex-col items-center justify-center h-full bg-gray-800">
-        <h2 className="text-lg font-semibold text-white mb-4">
-          Get Started
-        </h2>
-
-        <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            placeholder="Enter your email"
-            className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
-          >
+  <div className="absolute inset-1.5 bg-white rounded-sm overflow-hidden shadow-lg">
+      {!showFrame ? (
+        <div className="flex flex-col items-center justify-center h-full bg-gray-800">
+          <h2 className="text-lg font-semibold text-white mb-4">
             Get Started
-          </button>
-        </form>
-      </div>
-    ) : (
-      <div className="w-full h-full overflow-hidden">
-        <iframe
-          src="https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/199810e12ba8ae10d6e1f66cfe91bfe4"
-          className="w-full h-full"
-          style={{
-            transform: "scale(0.75)", // Zooms out to 90%
-            transformOrigin: "top left",
-            width: "133.33%",
-            height: "133.33%",
-            border: "none",
-            overflow : "hidden"
-          }}
-          sandbox="allow-scripts allow-same-origin"
-        >
-        </iframe>
-      </div>
-    )}
+          </h2>
+
+          {errorMessage && (
+            <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
+          )}
+
+          <form onSubmit={handleSubmit} className="w-4/5 space-y-4">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Enter your email"
+              className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm transition duration-200"
+            >
+              Get Started
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="w-full h-full overflow-hidden">
+          <iframe
+            src={iframeUrl}
+            className="w-full h-full"
+            style={{
+              transform: "scale(0.75)", // Zooms out to 75%
+              transformOrigin: "top left",
+              width: "133.33%",
+              height: "133.33%",
+              border: "none",
+              overflow: "hidden",
+            }}
+            sandbox="allow-scripts allow-same-origin"
+          ></iframe>
+        </div>
+      )}
+    </div>
   </div>
 
 
               {/* Bottom LED Indicator */}
               <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-[10px] text-green-500">ACTIVE</span>
+              {showFrame?<div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>:<div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
+                {showFrame?(<span className="text-[10px] text-green-500">ACTIVE</span>):(<span className="text-[10px] text-red-500">Not Connected</span>)}
               </div>
             </div>
 
