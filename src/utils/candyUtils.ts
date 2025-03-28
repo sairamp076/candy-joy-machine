@@ -55,11 +55,13 @@ export const getRandomCandyType = (): CandyType => {
  * Determines how many candies to drop based on score
  */
 export const getCandyCountForScore = (score: number): number => {
-  if(score == 20) return 1;
-  if(score == 40) return 2;
-  if(score == 60) return 3;
-  if(score == 80) return 4;
-  if(score == 100) return 5;
+  if (score<3)
+  {
+    return score
+  }
+    else if(score>3){
+    return Math.floor(Math.random() * 5) + 6; // 6-10 candies
+  }
 };
 
 /**
