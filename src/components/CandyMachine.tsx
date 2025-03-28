@@ -214,12 +214,15 @@ const CandyMachine = () => {
     setDisplayCandies(newDisplayCandies);
   };
 
+
+
+
   const [email, setEmail] = useState("");
   const [showFrame, setShowFrame] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [iframeUrl, setIframeUrl] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await fetch(
@@ -264,7 +267,7 @@ const CandyMachine = () => {
   const [polling, setPolling] = useState(false);
   const [scoreFound, setScoreFound] = useState(false);
 
-  const startPolling = (email: string) => {
+  const startPolling = (email) => {
     setPolling(true);
 
     const pollInterval = setInterval(async () => {
@@ -305,6 +308,7 @@ const CandyMachine = () => {
       }
     }, 3000); // Poll every 3 seconds
   };
+
 
   const handleRefillCompartment = (type: CandyTypeEnum) => {
     if (isDispensing) return;
@@ -397,7 +401,7 @@ const CandyMachine = () => {
     setCollectedCandies([]);
   };
 
-  const handleWinDrop = (score: number) => {
+  const handleWinDrop = (score) => {
     console.log("handling win drop");
     if (isDispensing) return;
 
@@ -530,6 +534,7 @@ const CandyMachine = () => {
     }
   };
 
+  // Calculate the total score for the history panel
   const totalScore = calculateTotalScore(history);
 
   return (
@@ -545,6 +550,7 @@ const CandyMachine = () => {
             transformStyle: "preserve-3d"
           }}
         >
+          {/* Sheet for stock management */}
           <div className="absolute top-4 right-4 z-30">
             <Sheet>
               <SheetTrigger asChild>
@@ -560,6 +566,7 @@ const CandyMachine = () => {
                   </SheetDescription>
                 </SheetHeader>
 
+                {/* Stock management tabs */}
                 <StockManagement 
                   stockLevels={stockLevels} 
                   onVendorRefill={handleVendorRefill} 
@@ -579,11 +586,15 @@ const CandyMachine = () => {
             </Sheet>
           </div>
 
+          {/* Title header */}
           <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 rounded-t-md border-b-4 border-gray-600">
             <h1 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md tracking-wider">CANDY HUB</h1>
+            <p className="text-sm text-center text-gray-100">Premium Candy Vending</p>
           </div>
 
+          {/* Main machine display */}
           <div className="relative p-4 md:p-6 bg-gradient-to-b from-gray-200 to-gray-300 rounded-xl">
+            {/* Display window for candy slots */}
             <div
               ref={displayWindowRef}
               className="display-window relative h-50 rounded-t-lg mb-4 overflow-hidden border-8 border-b-0 border-gray-600 shadow-inner bg-gradient-to-b from-gray-100 to-gray-200"
@@ -595,6 +606,7 @@ const CandyMachine = () => {
               <div className="absolute top-0 left-0 right-0 h-12 bg-white opacity-20 transform skew-y-3"></div>
 
               <div className="grid grid-cols-3 gap-3 p-3 h-full">
+                {/* 5 Star compartment */}
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A1: 5 Star ({candyCounts.fivestar})
@@ -648,6 +660,7 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
 
+                {/* Milkybar compartment */}
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A2: Milkybar ({candyCounts.milkybar})
@@ -701,6 +714,7 @@ const CandyMachine = () => {
                   </AlertDialog>
                 </div>
 
+                {/* Dairy Milk compartment */}
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
                   <div className="absolute left-2 top-2 z-10 bg-white bg-opacity-80 rounded-md px-2 py-1 text-xs font-semibold">
                     A3: Dairy Milk ({candyCounts.dairymilk})
@@ -756,6 +770,7 @@ const CandyMachine = () => {
               </div>
             </div>
 
+            {/* Score input */}
             <div className="mb-4 p-4 bg-gray-100 rounded-lg shadow-inner">
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div className="flex-1 w-full">
@@ -792,6 +807,7 @@ const CandyMachine = () => {
               </div>
             </div>
 
+            {/* Candy tray */}
             <div 
               ref={trayRef} 
               className="candy-tray relative bg-gray-100 h-32 rounded-lg border-8 border-t-0 border-gray-600 overflow-hidden shadow-inner"
@@ -802,59 +818,9 @@ const CandyMachine = () => {
             >
               <div className="absolute top-0 left-0 right-0 bg-gray-700 h-3"></div>
               
+              {/* Dispense button */}
               <button
                 onClick={handleDispense}
                 disabled={isDispensing || candyCounts.eclairs <= 0}
                 className={`absolute right-4 top-4 px-4 py-2 rounded-full flex items-center gap-2 transition ${
-                  isDispensing ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-                Dispense
-              </button>
-
-              <AnimatePresence>
-                {collectedCandies.map((candy) => (
-                  <motion.div
-                    key={candy.id}
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    className="m-1"
-                  >
-                    <Candy
-                      candy={candy}
-                      onEat={handleEatCandy}
-                      containerWidth={trayRef.current?.offsetWidth || 300}
-                      containerHeight={trayRef.current?.offsetHeight || 120}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {collectedCandies.length > 0 && (
-                <Button
-                  className="absolute left-4 bottom-4 bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1.5"
-                  onClick={handleCollectAll}
-                >
-                  <ShoppingCart size={16} className="mr-1" />
-                  Collect All
-                </Button>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        <HistoryPanel 
-          history={history} 
-          className="w-full max-w-md lg:max-w-xs flex-shrink-0 self-start"
-          totalScore={totalScore}
-        />
-      </div>
-    </div>
-  );
-};
-
-export default CandyMachine;
+                  isDispensing
