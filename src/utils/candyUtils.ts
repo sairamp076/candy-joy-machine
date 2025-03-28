@@ -54,12 +54,13 @@ export const getRandomCandyType = (): CandyType => {
 /**
  * Determines how many candies to drop based on score
  */
-export const getCandyCountForScore = (score: number): number => {
-  if(score == 20) return 1;
-  if(score == 40) return 2;
-  if(score == 60) return 3;
-  if(score == 80) return 4;
-  if(score == 100) return 5;
+export const getCandyCountForScore = (score: number): { eclairs: number, otherCandy: number } => {
+  if(score == 20) return { eclairs: 2, otherCandy: 0 };
+  if(score == 40) return { eclairs: 2, otherCandy: 2 };
+  if(score == 60) return { eclairs: 3, otherCandy: 3 };
+  if(score == 80) return { eclairs: 4, otherCandy: 4 };
+  if(score == 100) return { eclairs: 5, otherCandy: 5 };
+  return { eclairs: 1, otherCandy: 0 }; // Default case
 };
 
 /**
@@ -113,4 +114,15 @@ export const getRandomCandyOfType = (type: CandyType, candies: Candy[]): Candy |
  */
 export const calculateTotalScore = (history: HistoryItem[]): number => {
   return history.reduce((total, item) => total + item.score, 0);
+};
+
+/**
+ * Get a random candy type excluding specified types
+ */
+export const getRandomCandyTypeExcluding = (excludedTypes: CandyType[]): CandyType | null => {
+  const allTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero'];
+  const availableTypes = allTypes.filter(type => !excludedTypes.includes(type));
+  
+  if (availableTypes.length === 0) return null;
+  return availableTypes[Math.floor(Math.random() * availableTypes.length)];
 };
