@@ -400,13 +400,16 @@ const CandyMachine = () => {
     setCollectedCandies([]);
   };
 
+  
+
+
   const handleWinDrop = (score) => {
-    console.log("handling win drop")
+    console.log("handling win drop"+score)
     if (isDispensing) return;
 
     const userScore = score
     if (isNaN(userScore) || userScore <= 0) {
-      toast.error("Please enter a valid score!");
+      toast.error("Sorry Better Luck Next Time!");
       return;
     }
 
