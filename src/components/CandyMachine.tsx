@@ -406,7 +406,8 @@ const CandyMachine = () => {
 
     const userScore = score
     if (isNaN(userScore) || userScore <= 0) {
-      handleDispense()
+      toast.error("Please enter a valid score!");
+      return;
     }
 
     setIsDispensing(true);
