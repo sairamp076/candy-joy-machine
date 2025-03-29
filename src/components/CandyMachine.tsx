@@ -416,7 +416,7 @@ const CandyMachine = () => {
     setIsDispensing(true);
     playSound('button');
 
-    const candyCount = typeof userScore === "string" ? parseInt(userScore, 10):userScore
+    const candyCount = score
     const trayWidth = trayRef.current?.offsetWidth || 300;
     const trayHeight = trayRef.current?.offsetHeight || 120;
 
