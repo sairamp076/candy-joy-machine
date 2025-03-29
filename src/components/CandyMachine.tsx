@@ -416,7 +416,7 @@ const CandyMachine = () => {
     setIsDispensing(true);
     playSound('button');
 
-    const candyCount = getCandyCountForScore(userScore);
+    const candyCount = userScore/10;
     const trayWidth = trayRef.current?.offsetWidth || 300;
     const trayHeight = trayRef.current?.offsetHeight || 120;
 
