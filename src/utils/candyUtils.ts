@@ -54,12 +54,28 @@ export const getRandomCandyType = (): CandyType => {
 /**
  * Determines how many candies to drop based on score
  */
-export const getCandyCountForScore = (score: string): number => {
-  if(score == "20") return 2;
-  if(score == "40") return 4;
-  if(score == "60") return 6;
-  if(score == "80") return 8;
-  if(score == "100") return 10;
+export const getCandyCountForScore = (score: number): number => {
+  score = Number(score);
+  
+  if (score === 20) return 2;
+  if (score === 40) return 4;
+  if (score === 60) return 6;
+  if (score === 80) return 8;
+  if (score === 100) return 10;
+  
+  // Default fallback
+  return 1;
+};
+
+/**
+ * Generates a random candy type excluding specific types
+ */
+export const getRandomCandyTypeExcluding = (excludeTypes: CandyType[]): CandyType => {
+  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero']
+    .filter(type => !excludeTypes.includes(type));
+  
+  if (candyTypes.length === 0) return 'eclairs'; // Default to eclairs if all types excluded
+  return candyTypes[Math.floor(Math.random() * candyTypes.length)];
 };
 
 /**
