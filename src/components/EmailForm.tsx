@@ -40,7 +40,7 @@ const EmailForm = ({ onSuccess }: EmailFormProps) => {
       setLearningData(data);
       toast({
         title: "Success!",
-        description: "Your learning plan is ready.",
+        description: "Your personalized learning plan is ready.",
       });
       onSuccess();
     } catch (error) {
@@ -69,14 +69,18 @@ const EmailForm = ({ onSuccess }: EmailFormProps) => {
                   <Input placeholder="Enter your email" {...field} />
                 </FormControl>
                 <FormDescription>
-                  We'll use your email to personalize your learning experience.
+                  We'll use your email to personalize your learning experience and mentorship.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Loading..." : "Get My Learning Plan"}
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Get My Personalized Learning Plan"}
           </Button>
         </form>
       </Form>

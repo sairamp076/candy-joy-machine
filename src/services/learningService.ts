@@ -24,12 +24,12 @@ export interface LearningPlanResponse {
 
 export const fetchLearningPlan = async (email: string): Promise<LearningPlanResponse> => {
   try {
-    const response = await fetch('https://hackai.service-now.com/api/snc/candy_content', {
+    const url = `https://hackai.service-now.com/api/snc/candy_content?email=${encodeURIComponent(email)}`;
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: `email=${encodeURIComponent(email)}`,
     });
 
     if (!response.ok) {
