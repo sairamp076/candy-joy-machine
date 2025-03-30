@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { LearningPlanDay, LearningPlanResponse } from "@/services/learningService";
+import { LearningPlanDay, LearningPlanResponse, LearningPlanResult } from "@/services/learningService";
 
 interface LearningPlanItem extends LearningPlanDay {
   id: string;
@@ -23,6 +23,9 @@ interface LearningContextType {
   };
   updateLearningItemCompletion: (id: string, completed: boolean) => void;
   addCustomLearningItem: (day: string, item: Omit<LearningPlanDay, 'id' | 'day' | 'completed'>) => void;
+  selectedPlanIndex: number;
+  setSelectedPlanIndex: (index: number) => void;
+  availablePlans: LearningPlanResult[];
 }
 
 const defaultFeedback = {
@@ -42,6 +45,9 @@ const LearningContext = createContext<LearningContextType>({
   feedback: defaultFeedback,
   updateLearningItemCompletion: () => {},
   addCustomLearningItem: () => {},
+  selectedPlanIndex: 0,
+  setSelectedPlanIndex: () => {},
+  availablePlans: [],
 });
 
 export const useLearningContext = () => useContext(LearningContext);
@@ -50,21 +56,36 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
   const [email, setEmail] = useState("");
   const [learningData, setLearningData] = useState<LearningPlanResponse | null>(null);
   const [learningPlan, setLearningPlan] = useState<LearningPlanItem[]>([]);
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
+  const [availablePlans, setAvailablePlans] = useState<LearningPlanResult[]>([]);
 
   const processLearningData = (data: LearningPlanResponse) => {
-    const { result } = data;
-    const processedItems: LearningPlanItem[] = [];
+    // Handle both array and single object responses
+    let resultArray: LearningPlanResult[] = [];
+    
+    if (Array.isArray(data.result)) {
+      resultArray = data.result;
+    } else if (data.result) {
+      resultArray = [data.result];
+    }
+    
+    setAvailablePlans(resultArray);
+    
+    if (resultArray.length > 0) {
+      const currentPlan = resultArray[selectedPlanIndex] || resultArray[0];
+      const processedItems: LearningPlanItem[] = [];
 
-    Object.entries(result.learning_plan).forEach(([day, planData]) => {
-      processedItems.push({
-        ...planData,
-        id: `${day}-${Date.now()}`,
-        day,
-        completed: false,
+      Object.entries(currentPlan.learning_plan).forEach(([day, planData]) => {
+        processedItems.push({
+          ...planData,
+          id: `${day}-${Date.now()}`,
+          day,
+          completed: false,
+        });
       });
-    });
 
-    setLearningPlan(processedItems);
+      setLearningPlan(processedItems);
+    }
   };
 
   const updateLearningItemCompletion = (id: string, completed: boolean) => {
@@ -89,9 +110,29 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
     processLearningData(data);
   };
 
-  const product = learningData?.result?.product || "";
-  const level = learningData?.result?.level || "";
-  const feedback = learningData?.result?.feedback || defaultFeedback;
+  // When selected plan index changes, update the learning plan
+  const changeSelectedPlanIndex = (index: number) => {
+    if (availablePlans.length > index) {
+      setSelectedPlanIndex(index);
+      const currentPlan = availablePlans[index];
+      const processedItems: LearningPlanItem[] = [];
+
+      Object.entries(currentPlan.learning_plan).forEach(([day, planData]) => {
+        processedItems.push({
+          ...planData,
+          id: `${day}-${Date.now()}`,
+          day,
+          completed: false,
+        });
+      });
+
+      setLearningPlan(processedItems);
+    }
+  };
+
+  const product = availablePlans[selectedPlanIndex]?.product || "";
+  const level = availablePlans[selectedPlanIndex]?.level || "";
+  const feedback = availablePlans[selectedPlanIndex]?.feedback || defaultFeedback;
 
   return (
     <LearningContext.Provider
@@ -106,6 +147,9 @@ export const LearningProvider = ({ children }: { children: ReactNode }) => {
         feedback,
         updateLearningItemCompletion,
         addCustomLearningItem,
+        selectedPlanIndex,
+        setSelectedPlanIndex: changeSelectedPlanIndex,
+        availablePlans,
       }}
     >
       {children}

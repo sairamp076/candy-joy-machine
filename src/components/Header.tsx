@@ -1,6 +1,7 @@
+
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-import { Book } from "lucide-react";
+import { Book, Lightbulb, Sparkles } from "lucide-react";
 
 const Header = () => {
   return (

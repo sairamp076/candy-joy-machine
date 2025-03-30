@@ -5,10 +5,27 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LearningPlanCard from "@/components/LearningPlanCard";
 import AddLearningItemForm from "@/components/AddLearningItemForm";
-import { Book, AlertCircle } from "lucide-react";
+import { Book, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const LearningDashboard = () => {
-  const { product, level, feedback, learningPlan } = useLearningContext();
+  const { 
+    product, 
+    level, 
+    feedback, 
+    learningPlan, 
+    availablePlans, 
+    selectedPlanIndex, 
+    setSelectedPlanIndex 
+  } = useLearningContext();
 
   const completedCount = learningPlan.filter(item => item.completed).length;
   const totalItems = learningPlan.length;
@@ -21,8 +38,75 @@ const LearningDashboard = () => {
     return dayNumberA - dayNumberB;
   });
 
+  const getLevelBadgeClass = () => {
+    switch(level.toLowerCase()) {
+      case 'beginner':
+      case 'no skill':
+        return 'bg-red-500 hover:bg-red-600';
+      case 'medium':
+      case 'intermediate':
+        return 'bg-amber-500 hover:bg-amber-600';
+      case 'advanced':
+      case 'expert':
+        return 'bg-green-600 hover:bg-green-700';
+      default:
+        return 'bg-blue-500 hover:bg-blue-600';
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {availablePlans.length > 1 && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Multiple Learning Plans Available</CardTitle>
+            <CardDescription>Select a learning plan to view its details</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setSelectedPlanIndex(Math.max(0, selectedPlanIndex - 1))}
+                disabled={selectedPlanIndex === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <Select 
+                value={selectedPlanIndex.toString()}
+                onValueChange={(value) => setSelectedPlanIndex(parseInt(value, 10))}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availablePlans.map((plan, index) => (
+                    <SelectItem key={index} value={index.toString()}>
+                      {plan.product} - {plan.level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setSelectedPlanIndex(Math.min(availablePlans.length - 1, selectedPlanIndex + 1))}
+                disabled={selectedPlanIndex === availablePlans.length - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div>
+              <span className="text-sm text-muted-foreground">
+                Plan {selectedPlanIndex + 1} of {availablePlans.length}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -52,7 +136,9 @@ const LearningDashboard = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium">Level</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{level}</p>
+                  <div className="flex items-center mt-1 gap-2">
+                    <Badge className={getLevelBadgeClass()}>{level}</Badge>
+                  </div>
                 </div>
               </div>
             </div>
@@ -73,9 +159,9 @@ const LearningDashboard = () => {
             )}
             
             {feedback.things_to_work && (
-              <div>
-                <h3 className="text-sm font-medium text-amber-600">Areas to Improve</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{feedback.things_to_work}</p>
+              <div className="p-3 rounded-md bg-red-50 border border-red-200">
+                <h3 className="text-sm font-medium text-red-600">Areas to Improve</h3>
+                <p className="mt-1 text-sm text-red-700">{feedback.things_to_work}</p>
               </div>
             )}
             
