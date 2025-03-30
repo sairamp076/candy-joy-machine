@@ -72,7 +72,7 @@ export const getCandyCountForScore = (score: number): number => {
  */
 export const getRandomCandyTypeExcluding = (excludeTypes: CandyType[]): CandyType => {
   const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero']
-    .filter(type => !excludeTypes.includes(type));
+    .filter(type => !excludeTypes.includes(type as CandyType));
   
   if (candyTypes.length === 0) return 'eclairs'; // Default to eclairs if all types excluded
   return candyTypes[Math.floor(Math.random() * candyTypes.length)];
