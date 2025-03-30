@@ -25,7 +25,7 @@ export interface LearningPlanResponse {
 export const fetchLearningPlan = async (email: string): Promise<LearningPlanResponse> => {
   try {
     const response = await fetch('https://hackai.service-now.com/api/snc/candy_content', {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
