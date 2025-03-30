@@ -12,17 +12,6 @@ const Header = () => {
             Candy Land
           </Link>
         </div>
-        
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <Link to="/learning" className={navigationMenuTriggerStyle() + " flex items-center gap-2"}>
-                <Book size={18} />
-                <span>Track My Learning</span>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
       </div>
     </header>
   );
