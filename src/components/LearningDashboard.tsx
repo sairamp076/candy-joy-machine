@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import LearningPlanCard from "@/components/LearningPlanCard";
 import AddLearningItemForm from "@/components/AddLearningItemForm";
 import { Book, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const LearningDashboard = () => {
   const { product, level, feedback, learningPlan } = useLearningContext();
@@ -20,6 +21,22 @@ const LearningDashboard = () => {
     const dayNumberB = parseInt(b.day.replace("day", ""), 10);
     return dayNumberA - dayNumberB;
   });
+
+  const getLevelBadgeClass = () => {
+    switch(level.toLowerCase()) {
+      case 'beginner':
+      case 'no skill':
+        return 'bg-red-500 hover:bg-red-600';
+      case 'medium':
+      case 'intermediate':
+        return 'bg-amber-500 hover:bg-amber-600';
+      case 'advanced':
+      case 'expert':
+        return 'bg-green-600 hover:bg-green-700';
+      default:
+        return 'bg-blue-500 hover:bg-blue-600';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -52,7 +69,9 @@ const LearningDashboard = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium">Level</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{level}</p>
+                  <div className="flex items-center mt-1 gap-2">
+                    <Badge className={getLevelBadgeClass()}>{level}</Badge>
+                  </div>
                 </div>
               </div>
             </div>
@@ -73,9 +92,9 @@ const LearningDashboard = () => {
             )}
             
             {feedback.things_to_work && (
-              <div>
-                <h3 className="text-sm font-medium text-amber-600">Areas to Improve</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{feedback.things_to_work}</p>
+              <div className="p-3 rounded-md bg-orange-50 border border-orange-200">
+                <h3 className="text-sm font-medium text-orange-600">Areas to Improve</h3>
+                <p className="mt-1 text-sm text-orange-700">{feedback.things_to_work}</p>
               </div>
             )}
             

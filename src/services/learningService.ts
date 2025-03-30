@@ -36,7 +36,15 @@ export const fetchLearningPlan = async (email: string): Promise<LearningPlanResp
       throw new Error('Failed to fetch learning plan');
     }
 
-    return await response.json();
+    const data = await response.json();
+    
+    // Handle if the API returns an array instead of a single object
+    if (Array.isArray(data)) {
+      // Return the first item in the array
+      return data[0];
+    }
+    
+    return data;
   } catch (error) {
     console.error('Error fetching learning plan:', error);
     throw error;
