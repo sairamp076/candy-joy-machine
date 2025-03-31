@@ -18,7 +18,7 @@ import { fetchVendorStock, fetchMachineStock, fetchFloorStock } from '@/services
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { Package, Database, ShoppingCart } from 'lucide-react';
+import { Package, Database, ShoppingCart, ChartBar } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CANDY_DETAILS, CandyType } from '@/utils/candyUtils';
 import Candy from '@/components/Candy';
