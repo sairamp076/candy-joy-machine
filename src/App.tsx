@@ -8,8 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Header from "./components/Header";
 import LearningPage from "./pages/LearningPage";
-import StockManagementPage from "./pages/StockManagementPage";
-import StockTrackingPage from "./pages/StockTrackingPage";
 
 // Create a new query client with proper caching configuration
 const queryClient = new QueryClient({
@@ -31,8 +29,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/learning" element={<LearningPage />} />
-          <Route path="/stock-management" element={<StockManagementPage />} />
-          <Route path="/stock-tracking" element={<StockTrackingPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
