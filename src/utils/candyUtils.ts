@@ -1,132 +1,89 @@
 
-export type CandyType = 'fivestar' | 'milkybar' | 'dairymilk' | 'eclairs' | 'ferrero';
-
-export interface Candy {
+export interface CandyType {
   id: string;
-  type: CandyType;
-  x: number;
-  y: number;
-  rotation: number;
-  isEaten?: boolean;
+  name: string;
+  icon: JSX.Element;
+  color: string;
+  costPoints: number;
+  image: string;
 }
 
-export interface HistoryItem {
-  id: string;
-  type: CandyType;
-  timestamp: Date;
-  score: number;
-}
-
-// Candy names and base scores
-export const CANDY_DETAILS: Record<CandyType, { name: string; baseScore: number; defaultCount: number }> = {
-  fivestar: { name: '5 Star', baseScore: 15, defaultCount: 10 },
-  milkybar: { name: 'Milkybar', baseScore: 10, defaultCount: 10 },
-  dairymilk: { name: 'Dairy Milk', baseScore: 20, defaultCount: 10 },
-  eclairs: { name: 'Eclairs', baseScore: 5, defaultCount: 10 },
-  ferrero: { name: 'Ferrero Rocher', baseScore: 25, defaultCount: 10 }
+export const getRandomPosition = (min: number, max: number) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-/**
- * Creates a new candy object with random position within the bounds
- */
-export const createCandy = (
-  type?: CandyType,
-  maxX: number = 280,
-  maxY: number = 50
-): Candy => {
-  return {
-    id: Math.random().toString(36).substring(2, 9),
-    type: type || getRandomCandyType(),
-    x: Math.max(20, Math.min(maxX - 40, Math.random() * maxX)),
-    y: Math.max(20, Math.min(maxY - 40, Math.random() * maxY)),
-    rotation: Math.random() * 360
-  };
+// Array to store available candies
+const availableCandies: CandyType[] = [
+  {
+    id: 'milky_bar',
+    name: 'Milky Bar',
+    icon: <></>, // Will be replaced at runtime
+    color: '#f0f0f0',
+    costPoints: 2,
+    image: '/path/to/milkybar.png'
+  },
+  {
+    id: 'ferro_rocher',
+    name: 'Ferro Rocher',
+    icon: <></>, // Will be replaced at runtime
+    color: '#d4af37',
+    costPoints: 5,
+    image: '/path/to/ferrero.png'
+  },
+  {
+    id: 'eclairs',
+    name: 'Eclairs',
+    icon: <></>, // Will be replaced at runtime
+    color: '#a52a2a',
+    costPoints: 1,
+    image: '/path/to/eclairs.png'
+  },
+  {
+    id: 'dairy_milk',
+    name: 'Dairy Milk',
+    icon: <></>, // Will be replaced at runtime
+    color: '#4b0082',
+    costPoints: 3,
+    image: '/path/to/dairymilk.png'
+  },
+  {
+    id: 'five_star',
+    name: 'Five Star',
+    icon: <></>, // Will be replaced at runtime
+    color: '#ffd700',
+    costPoints: 2,
+    image: '/path/to/fivestar.png'
+  }
+];
+
+// Array to store candy types
+export const candyTypes: CandyType[] = availableCandies;
+
+// Function to get a specific candy by ID
+export const getCandyById = (id: string) => {
+  return candyTypes.find(candy => candy.id === id);
 };
 
-/**
- * Generates a random candy type
- */
-export const getRandomCandyType = (): CandyType => {
-  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero'];
-  return candyTypes[Math.floor(Math.random() * candyTypes.length)];
+// Generate a random candy
+export const getRandomCandy = () => {
+  const randomIndex = Math.floor(Math.random() * candyTypes.length);
+  return candyTypes[randomIndex];
 };
 
-/**
- * Determines how many candies to drop based on score
- */
-export const getCandyCountForScore = (score: number): number => {
-  score = Number(score);
-  
-  if (score === 20) return 2;
-  if (score === 40) return 4;
-  if (score === 60) return 6;
-  if (score === 80) return 8;
-  if (score === 100) return 10;
-  
-  // Default fallback
-  return 1;
+// Calculate points for candies
+export const calculatePoints = (candies: CandyType[]) => {
+  return candies.reduce((total, candy) => total + candy.costPoints, 0);
 };
 
-/**
- * Generates a random candy type excluding specific types
- */
-export const getRandomCandyTypeExcluding = (excludeTypes: CandyType[]): CandyType => {
-  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero']
-    .filter(type => !excludeTypes.includes(type as CandyType));
-  
-  if (candyTypes.length === 0) return 'eclairs'; // Default to eclairs if all types excluded
-  return candyTypes[Math.floor(Math.random() * candyTypes.length)];
+export const getAnimationDuration = () => {
+  // Generate a random duration between 0.5 and 1.5 seconds
+  return 0.5 + Math.random() * 1;
 };
 
-/**
- * Generates an array of candy objects
- */
-export const generateCandies = (count: number, type?: CandyType, maxX?: number, maxY?: number): Candy[] => {
-  return Array.from({ length: count }, () => createCandy(type, maxX, maxY));
-};
-
-/**
- * Play sound effect
- */
-export const playSound = (sound: 'button' | 'drop' | 'eat'): void => {
-  // In a real implementation, this would play actual sounds
-  console.log(`Playing ${sound} sound`);
-};
-
-/**
- * Creates a specific candy (Eclairs) for dispense operation
- */
-export const createEclairsCandy = (maxX: number = 280, maxY: number = 50): Candy => {
-  return createCandy('eclairs', maxX, maxY);
-};
-
-/**
- * Generate display candies for a specific compartment
- */
-export const generateDisplayCandies = (count: number, type: CandyType): Candy[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `display-${type}-${index}`,
-    type: type,
-    x: 10 + (index % 3) * 25,
-    y: 10 + Math.floor(index / 3) * 20,
-    rotation: (index * 15) % 360
-  }));
-};
-
-/**
- * Get a random candy of a specific type from the display
- */
-export const getRandomCandyOfType = (type: CandyType, candies: Candy[]): Candy | null => {
-  const typeSpecificCandies = candies.filter(candy => candy.type === type);
-  if (typeSpecificCandies.length === 0) return null;
-  
-  const randomIndex = Math.floor(Math.random() * typeSpecificCandies.length);
-  return typeSpecificCandies[randomIndex];
-};
-
-/**
- * Calculates total score from history
- */
-export const calculateTotalScore = (history: HistoryItem[]): number => {
-  return history.reduce((total, item) => total + item.score, 0);
+// Function to get the next available candy
+export let currentCandyIndex = 0;
+export const getNextCandy = () => {
+  const candy = candyTypes[currentCandyIndex];
+  currentCandyIndex = (currentCandyIndex + 1) % candyTypes.length;
+  return candy;
 };
