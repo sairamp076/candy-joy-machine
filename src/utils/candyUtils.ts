@@ -1,7 +1,4 @@
 
-import React from 'react';
-import { Candy, Cookie, Gift, IceCream2, Coffee } from 'lucide-react';
-
 export interface CandyType {
   id: string;
   name: string;
@@ -20,7 +17,7 @@ const availableCandies: CandyType[] = [
   {
     id: 'milky_bar',
     name: 'Milky Bar',
-    icon: React.createElement(Cookie, { size: 16 }), // Using React.createElement to avoid JSX in .ts file
+    icon: <></>, // Will be replaced at runtime
     color: '#f0f0f0',
     costPoints: 2,
     image: '/path/to/milkybar.png'
@@ -28,7 +25,7 @@ const availableCandies: CandyType[] = [
   {
     id: 'ferro_rocher',
     name: 'Ferro Rocher',
-    icon: React.createElement(Gift, { size: 16 }),
+    icon: <></>, // Will be replaced at runtime
     color: '#d4af37',
     costPoints: 5,
     image: '/path/to/ferrero.png'
@@ -36,7 +33,7 @@ const availableCandies: CandyType[] = [
   {
     id: 'eclairs',
     name: 'Eclairs',
-    icon: React.createElement(Candy, { size: 16 }),
+    icon: <></>, // Will be replaced at runtime
     color: '#a52a2a',
     costPoints: 1,
     image: '/path/to/eclairs.png'
@@ -44,7 +41,7 @@ const availableCandies: CandyType[] = [
   {
     id: 'dairy_milk',
     name: 'Dairy Milk',
-    icon: React.createElement(IceCream2, { size: 16 }),
+    icon: <></>, // Will be replaced at runtime
     color: '#4b0082',
     costPoints: 3,
     image: '/path/to/dairymilk.png'
@@ -52,7 +49,7 @@ const availableCandies: CandyType[] = [
   {
     id: 'five_star',
     name: 'Five Star',
-    icon: React.createElement(Coffee, { size: 16 }),
+    icon: <></>, // Will be replaced at runtime
     color: '#ffd700',
     costPoints: 2,
     image: '/path/to/fivestar.png'
