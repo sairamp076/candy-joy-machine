@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -14,41 +15,22 @@ import {
   playSound,
   CANDY_DETAILS,
   createEclairsCandy,
-  calculateTotalScore
+  calculateTotalScore,
+  getMachineStock,
+  updateMachineStock
 } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import {
-  PackagePlus,
-  Package,
   ShoppingCart,
   RefreshCw,
-  Menu,
-  Truck,
-  User,
-  Store,
   Zap,
-  Trophy
+  ChevronDown,
+  Candy as CandyIcon
 } from 'lucide-react';
 import { toast } from "sonner";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger
-} from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface StockLevels {
-  vendingMachine: Record<CandyTypeEnum, number>;
-  floorManager: Record<CandyTypeEnum, number>;
-  vendor: Record<CandyTypeEnum, number>;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const CandyMachine = () => {
   const [candyCounts, setCandyCounts] = useState<Record<CandyTypeEnum, number>>({
@@ -57,24 +39,6 @@ const CandyMachine = () => {
     dairymilk: CANDY_DETAILS.dairymilk.defaultCount,
     eclairs: CANDY_DETAILS.eclairs.defaultCount,
     ferrero: CANDY_DETAILS.ferrero.defaultCount
-  });
-
-  const [stockLevels, setStockLevels] = useState<StockLevels>({
-    vendingMachine: { ...candyCounts },
-    floorManager: {
-      fivestar: 20,
-      milkybar: 20,
-      dairymilk: 20,
-      eclairs: 20,
-      ferrero: 20
-    },
-    vendor: {
-      fivestar: 50,
-      milkybar: 50,
-      dairymilk: 50,
-      eclairs: 50,
-      ferrero: 50
-    }
   });
 
   const [displayCandies, setDisplayCandies] = useState<Record<CandyTypeEnum, CandyType[]>>({
@@ -88,7 +52,8 @@ const CandyMachine = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [score, setScore] = useState(0);
   const [isDispensing, setIsDispensing] = useState<boolean>(false);
-  const [refillCount, setRefillCount] = useState<number>(5);
+  const [selectedFloor, setSelectedFloor] = useState<string>("2");
+  const [isLoadingStock, setIsLoadingStock] = useState<boolean>(false);
 
   const displayWindowRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
@@ -97,11 +62,46 @@ const CandyMachine = () => {
 
   useEffect(() => {
     initializeCandies();
-    setStockLevels(prev => ({
-      ...prev,
-      vendingMachine: { ...candyCounts }
-    }));
-  }, []);
+    fetchMachineStock();
+
+    // Set up refresh interval for eclairs stock
+    const intervalId = setInterval(() => {
+      fetchMachineStock();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [selectedFloor]);
+
+  const fetchMachineStock = async () => {
+    setIsLoadingStock(true);
+    try {
+      const floor = parseInt(selectedFloor, 10);
+      const stockCount = await getMachineStock(floor);
+      
+      // Update only eclairs count
+      setCandyCounts(prev => ({
+        ...prev,
+        eclairs: stockCount
+      }));
+
+      // Update display candies for eclairs
+      setDisplayCandies(prev => ({
+        ...prev,
+        eclairs: generateDisplayCandies(stockCount, 'eclairs')
+      }));
+
+      // Show toast notification
+      toast("Eclairs Stock Refreshed", {
+        description: `Current stock: ${stockCount}`,
+        icon: <CandyIcon className="h-4 w-4" />,
+      });
+    } catch (error) {
+      console.error("Error fetching machine stock:", error);
+      toast.error("Failed to refresh stock");
+    } finally {
+      setIsLoadingStock(false);
+    }
+  };
 
   const initializeCandies = () => {
     const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
@@ -114,31 +114,8 @@ const CandyMachine = () => {
 
     setDisplayCandies(newDisplayCandies);
   };
-  
-  // Function to update machine stock via API
-  const updateMachineStock = async (eclairsCount: number) => {
-    try {
-      const response = await fetch('https://hackai.service-now.com/api/snc/candy_content/put_machine_stock?floor=2', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eclairs_stock: eclairsCount
-        })
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to update machine stock:', await response.text());
-      } else {
-        console.log('Machine stock updated successfully');
-      }
-    } catch (error) {
-      console.error('Error updating machine stock:', error);
-    }
-  };
 
-  const handleDispense = () => {
+  const handleDispense = async () => {
     if (isDispensing || candyCounts.eclairs <= 0) return;
 
     setIsDispensing(true);
@@ -151,21 +128,15 @@ const CandyMachine = () => {
       eclairs: newEclairsCount
     }));
 
-    setStockLevels(prev => ({
-      ...prev,
-      vendingMachine: {
-        ...prev.vendingMachine,
-        eclairs: newEclairsCount
-      }
-    }));
-
-    // Call the API to update the machine stock
-    updateMachineStock(newEclairsCount);
-
+    // Update display candies
     setDisplayCandies(prev => ({
       ...prev,
       eclairs: generateDisplayCandies(newEclairsCount, 'eclairs')
     }));
+
+    // Call the API to update the machine stock
+    const floor = parseInt(selectedFloor, 10);
+    await updateMachineStock(floor, newEclairsCount);
 
     setTimeout(() => {
       const trayWidth = trayRef.current?.offsetWidth || 300;
@@ -178,134 +149,6 @@ const CandyMachine = () => {
 
       setIsDispensing(false);
     }, 300);
-  };
-
-  const handleRefillAll = () => {
-    if (isDispensing) return;
-
-    const canRefill = Object.keys(candyCounts).every(
-      type => stockLevels.floorManager[type as CandyTypeEnum] >= (CANDY_DETAILS[type as CandyTypeEnum].defaultCount - candyCounts[type as CandyTypeEnum])
-    );
-
-    if (!canRefill) {
-      toast.error("Floor manager doesn't have enough stock for complete refill");
-      return;
-    }
-
-    playSound('button');
-    toast.success("All compartments refilled!");
-
-    const stockNeeded: Record<CandyTypeEnum, number> = {} as Record<CandyTypeEnum, number>;
-    Object.keys(candyCounts).forEach(type => {
-      const candyType = type as CandyTypeEnum;
-      stockNeeded[candyType] = CANDY_DETAILS[candyType].defaultCount - candyCounts[candyType];
-    });
-
-    setStockLevels(prev => {
-      const newFloorManagerStock = { ...prev.floorManager };
-      Object.keys(stockNeeded).forEach(type => {
-        const candyType = type as CandyTypeEnum;
-        newFloorManagerStock[candyType] -= stockNeeded[candyType];
-      });
-
-      return {
-        ...prev,
-        floorManager: newFloorManagerStock,
-        vendingMachine: {
-          fivestar: CANDY_DETAILS.fivestar.defaultCount,
-          milkybar: CANDY_DETAILS.milkybar.defaultCount,
-          dairymilk: CANDY_DETAILS.dairymilk.defaultCount,
-          eclairs: CANDY_DETAILS.eclairs.defaultCount,
-          ferrero: CANDY_DETAILS.ferrero.defaultCount
-        }
-      };
-    });
-
-    setCandyCounts({
-      fivestar: CANDY_DETAILS.fivestar.defaultCount,
-      milkybar: CANDY_DETAILS.milkybar.defaultCount,
-      dairymilk: CANDY_DETAILS.dairymilk.defaultCount,
-      eclairs: CANDY_DETAILS.eclairs.defaultCount,
-      ferrero: CANDY_DETAILS.ferrero.defaultCount
-    });
-
-    const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
-      fivestar: generateDisplayCandies(CANDY_DETAILS.fivestar.defaultCount, 'fivestar'),
-      milkybar: generateDisplayCandies(CANDY_DETAILS.milkybar.defaultCount, 'milkybar'),
-      dairymilk: generateDisplayCandies(CANDY_DETAILS.dairymilk.defaultCount, 'dairymilk'),
-      eclairs: generateDisplayCandies(CANDY_DETAILS.eclairs.defaultCount, 'eclairs'),
-      ferrero: generateDisplayCandies(CANDY_DETAILS.ferrero.defaultCount, 'ferrero')
-    };
-
-    setDisplayCandies(newDisplayCandies);
-  };
-
-  const handleRefillCompartment = (type: CandyTypeEnum) => {
-    if (isDispensing) return;
-
-    const currentCount = candyCounts[type];
-    const maxCount = CANDY_DETAILS[type].defaultCount;
-
-    if (currentCount >= maxCount) {
-      toast.error(`${CANDY_DETAILS[type].name} compartment is already full!`);
-      return;
-    }
-
-    const refillAmount = Math.min(refillCount, maxCount - currentCount);
-
-    if (stockLevels.floorManager[type] < refillAmount) {
-      toast.error(`Floor manager doesn't have enough ${CANDY_DETAILS[type].name} stock!`);
-      return;
-    }
-
-    playSound('button');
-
-    const newCount = currentCount + refillAmount;
-
-    setCandyCounts(prev => ({
-      ...prev,
-      [type]: newCount
-    }));
-
-    setStockLevels(prev => ({
-      ...prev,
-      floorManager: {
-        ...prev.floorManager,
-        [type]: prev.floorManager[type] - refillAmount
-      },
-      vendingMachine: {
-        ...prev.vendingMachine,
-        [type]: newCount
-      }
-    }));
-
-    toast.success(`${CANDY_DETAILS[type].name} compartment refilled to ${newCount}!`);
-
-    setDisplayCandies(prev => ({
-      ...prev,
-      [type]: generateDisplayCandies(newCount, type)
-    }));
-  };
-
-  const handleVendorRefill = (type: CandyTypeEnum, amount: number) => {
-    if (stockLevels.vendor[type] < amount) {
-      toast.error(`Vendor doesn't have enough ${CANDY_DETAILS[type].name} stock!`);
-      return;
-    }
-
-    setStockLevels(prev => ({
-      ...prev,
-      vendor: {
-        ...prev.vendor,
-        [type]: prev.vendor[type] - amount
-      },
-      floorManager: {
-        ...prev.floorManager,
-        [type]: prev.floorManager[type] + amount
-      }
-    }));
-
-    toast.success(`Floor manager received ${amount} ${CANDY_DETAILS[type].name} from vendor!`);
   };
 
   const handleCollectAll = () => {
@@ -379,14 +222,6 @@ const CandyMachine = () => {
       setCandyCounts(prev => ({
         ...prev,
         [selectedType]: prev[selectedType] - 1
-      }));
-
-      setStockLevels(prev => ({
-        ...prev,
-        vendingMachine: {
-          ...prev.vendingMachine,
-          [selectedType]: prev.vendingMachine[selectedType] - 1
-        }
       }));
 
       setDisplayCandies(prev => ({
@@ -517,6 +352,28 @@ const CandyMachine = () => {
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-center gap-6 p-2 md:p-4">
+      <div className="w-full max-w-xl mx-auto mb-4">
+        <div className="flex items-center justify-center space-x-2">
+          <span className="text-gray-700 font-medium">Floor:</span>
+          <Select value={selectedFloor} onValueChange={setSelectedFloor}>
+            <SelectTrigger className="w-24">
+              <SelectValue placeholder="Floor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Floor 1</SelectItem>
+              <SelectItem value="2">Floor 2</SelectItem>
+            </SelectContent>
+          </Select>
+          <button 
+            onClick={fetchMachineStock} 
+            className="ml-2 p-1.5 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+            disabled={isLoadingStock}
+          >
+            <RefreshCw size={16} className={isLoadingStock ? "animate-spin" : ""} />
+          </button>
+        </div>
+      </div>
+
       <div className="w-full flex flex-col lg:flex-row items-center justify-center gap-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -809,20 +666,6 @@ const CandyMachine = () => {
                 />
               </div>
               Dispense Eclairs
-            </Button>
-
-            <div className="mb-4 mt-4">
-              <div className="text-sm text-white font-semibold mb-2 flex items-center gap-2">
-              </div>
-            </div>
-
-            <Button
-              onClick={handleRefillAll}
-              className="w-full mt-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-2 border-blue-700 shadow-lg"
-              disabled={isDispensing}
-            >
-              <RefreshCw size={18} />
-              Refill All
             </Button>
           </div>
 

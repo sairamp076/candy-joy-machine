@@ -74,6 +74,7 @@ export const getCandyCountForScore = (score: number): number => {
  * Generates a random candy type excluding specific types
  */
 export const getRandomCandyTypeExcluding = (excludeTypes: CandyType[]): CandyType => {
+  // Fix the type error by ensuring we're working with CandyType[] not string[]
   const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero']
     .filter(type => !excludeTypes.includes(type as CandyType));
   
@@ -132,4 +133,60 @@ export const getRandomCandyOfType = (type: CandyType, candies: Candy[]): Candy |
  */
 export const calculateTotalScore = (history: HistoryItem[]): number => {
   return history.reduce((total, item) => total + item.score, 0);
+};
+
+/**
+ * API functions for machine stock
+ */
+export interface MachineStockResponse {
+  result: {
+    quantity: string;
+    floor_number: string;
+  }[];
+}
+
+export const getMachineStock = async (floor: number): Promise<number> => {
+  try {
+    const response = await fetch(`https://hackai.service-now.com/api/snc/candy_content/get_machine_stock?floor=${floor}`);
+    
+    if (!response.ok) {
+      console.error('Failed to get machine stock:', await response.text());
+      return 0;
+    }
+    
+    const data: MachineStockResponse = await response.json();
+    if (data.result && data.result.length > 0) {
+      return parseInt(data.result[0].quantity, 10) || 0;
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error('Error fetching machine stock:', error);
+    return 0;
+  }
+};
+
+export const updateMachineStock = async (floor: number, eclairsCount: number): Promise<boolean> => {
+  try {
+    const response = await fetch(`https://hackai.service-now.com/api/snc/candy_content/put_machine_stock?floor=${floor}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        eclairs_stock: eclairsCount
+      })
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to update machine stock:', await response.text());
+      return false;
+    }
+    
+    console.log('Machine stock updated successfully');
+    return true;
+  } catch (error) {
+    console.error('Error updating machine stock:', error);
+    return false;
+  }
 };
