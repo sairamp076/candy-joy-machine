@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Cookie, Gift, Candy, IceCream2, Coffee } from 'lucide-react';
 
@@ -74,12 +73,14 @@ export const getCandyCountForScore = (score: number): number => {
  * Generates a random candy type excluding specific types
  */
 export const getRandomCandyTypeExcluding = (excludeTypes: CandyType[]): CandyType => {
-  // Fix the type error by ensuring we're working with CandyType[] not string[]
-  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero']
-    .filter(type => !excludeTypes.includes(type as CandyType));
+  // Define the array with the correct type from the beginning
+  const candyTypes: CandyType[] = ['fivestar', 'milkybar', 'dairymilk', 'eclairs', 'ferrero'];
   
-  if (candyTypes.length === 0) return 'eclairs'; // Default to eclairs if all types excluded
-  return candyTypes[Math.floor(Math.random() * candyTypes.length)];
+  // Filter out the excluded types
+  const availableTypes = candyTypes.filter(type => !excludeTypes.includes(type));
+  
+  if (availableTypes.length === 0) return 'eclairs'; // Default to eclairs if all types excluded
+  return availableTypes[Math.floor(Math.random() * availableTypes.length)];
 };
 
 /**
