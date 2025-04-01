@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Cookie, Gift, Candy, IceCream2, Coffee } from 'lucide-react';
 
@@ -148,6 +149,12 @@ export interface MachineStockResponse {
 
 export const getMachineStock = async (floor: number): Promise<number> => {
   try {
+    // Ensure floor is within valid range (1-3)
+    if (floor < 1 || floor > 3) {
+      console.error('Invalid floor number:', floor);
+      return 0;
+    }
+    
     const response = await fetch(`https://hackai.service-now.com/api/snc/candy_content/get_machine_stock?floor=${floor}`);
     
     if (!response.ok) {
@@ -169,6 +176,12 @@ export const getMachineStock = async (floor: number): Promise<number> => {
 
 export const updateMachineStock = async (floor: number, eclairsCount: number): Promise<boolean> => {
   try {
+    // Ensure floor is within valid range (1-3)
+    if (floor < 1 || floor > 3) {
+      console.error('Invalid floor number:', floor);
+      return false;
+    }
+
     const response = await fetch(`https://hackai.service-now.com/api/snc/candy_content/put_machine_stock?floor=${floor}`, {
       method: 'PUT',
       headers: {

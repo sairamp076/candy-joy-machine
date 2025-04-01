@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -63,13 +62,6 @@ const CandyMachine = () => {
   useEffect(() => {
     initializeCandies();
     fetchMachineStock();
-
-    // Set up refresh interval for eclairs stock
-    const intervalId = setInterval(() => {
-      fetchMachineStock();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(intervalId);
   }, [selectedFloor]);
 
   const fetchMachineStock = async () => {
@@ -78,19 +70,16 @@ const CandyMachine = () => {
       const floor = parseInt(selectedFloor, 10);
       const stockCount = await getMachineStock(floor);
       
-      // Update only eclairs count
       setCandyCounts(prev => ({
         ...prev,
         eclairs: stockCount
       }));
 
-      // Update display candies for eclairs
       setDisplayCandies(prev => ({
         ...prev,
         eclairs: generateDisplayCandies(stockCount, 'eclairs')
       }));
 
-      // Show toast notification
       toast("Eclairs Stock Refreshed", {
         description: `Current stock: ${stockCount}`,
         icon: <CandyIcon className="h-4 w-4" />,
@@ -128,13 +117,11 @@ const CandyMachine = () => {
       eclairs: newEclairsCount
     }));
 
-    // Update display candies
     setDisplayCandies(prev => ({
       ...prev,
       eclairs: generateDisplayCandies(newEclairsCount, 'eclairs')
     }));
 
-    // Call the API to update the machine stock
     const floor = parseInt(selectedFloor, 10);
     await updateMachineStock(floor, newEclairsCount);
 
@@ -362,6 +349,7 @@ const CandyMachine = () => {
             <SelectContent>
               <SelectItem value="1">Floor 1</SelectItem>
               <SelectItem value="2">Floor 2</SelectItem>
+              <SelectItem value="3">Floor 3</SelectItem>
             </SelectContent>
           </Select>
           <button 

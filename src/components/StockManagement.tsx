@@ -11,6 +11,7 @@ import { Store, User, Truck } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StockLevels {
   vendingMachine: Record<CandyTypeEnum, number>;
@@ -21,11 +22,29 @@ interface StockLevels {
 interface StockManagementProps {
   stockLevels: StockLevels;
   onVendorRefill: (type: CandyTypeEnum, amount: number) => void;
+  selectedFloor?: string;
+  onFloorChange?: (floor: string) => void;
 }
 
-const StockManagement = ({ stockLevels, onVendorRefill }: StockManagementProps) => {
+const StockManagement = ({ stockLevels, onVendorRefill, selectedFloor = "2", onFloorChange }: StockManagementProps) => {
   return (
     <div className="py-6">
+      {onFloorChange && (
+        <div className="mb-4 flex items-center justify-center gap-2">
+          <span className="text-gray-700">Floor:</span>
+          <Select value={selectedFloor} onValueChange={onFloorChange}>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Select Floor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Floor 1</SelectItem>
+              <SelectItem value="2">Floor 2</SelectItem>
+              <SelectItem value="3">Floor 3</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <Tabs defaultValue="machine" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="machine" className="flex items-center gap-2">
