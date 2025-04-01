@@ -1,4 +1,7 @@
 
+import React from 'react';
+import { Cookie, Gift, Candy, IceCream2, Coffee } from 'lucide-react';
+
 export type CandyType = 'fivestar' | 'milkybar' | 'dairymilk' | 'eclairs' | 'ferrero';
 
 export interface Candy {

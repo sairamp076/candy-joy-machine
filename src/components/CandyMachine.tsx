@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
 import Candy from './Candy';
 import HistoryPanel from './HistoryPanel';
-import StockManagement from './StockManagement';
 import {
   Candy as CandyType,
   CandyType as CandyTypeEnum,
@@ -115,6 +114,29 @@ const CandyMachine = () => {
 
     setDisplayCandies(newDisplayCandies);
   };
+  
+  // Function to update machine stock via API
+  const updateMachineStock = async (eclairsCount: number) => {
+    try {
+      const response = await fetch('https://hackai.service-now.com/api/snc/candy_content/put_machine_stock?floor=2', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eclairs_stock: eclairsCount
+        })
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to update machine stock:', await response.text());
+      } else {
+        console.log('Machine stock updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating machine stock:', error);
+    }
+  };
 
   const handleDispense = () => {
     if (isDispensing || candyCounts.eclairs <= 0) return;
@@ -122,22 +144,27 @@ const CandyMachine = () => {
     setIsDispensing(true);
     playSound('button');
 
+    const newEclairsCount = candyCounts.eclairs - 1;
+    
     setCandyCounts(prev => ({
       ...prev,
-      eclairs: prev.eclairs - 1
+      eclairs: newEclairsCount
     }));
 
     setStockLevels(prev => ({
       ...prev,
       vendingMachine: {
         ...prev.vendingMachine,
-        eclairs: prev.vendingMachine.eclairs - 1
+        eclairs: newEclairsCount
       }
     }));
 
+    // Call the API to update the machine stock
+    updateMachineStock(newEclairsCount);
+
     setDisplayCandies(prev => ({
       ...prev,
-      eclairs: generateDisplayCandies(candyCounts.eclairs - 1, 'eclairs')
+      eclairs: generateDisplayCandies(newEclairsCount, 'eclairs')
     }));
 
     setTimeout(() => {
@@ -211,98 +238,6 @@ const CandyMachine = () => {
     };
 
     setDisplayCandies(newDisplayCandies);
-  };
-
-  const [email, setEmail] = useState("");
-  const [showFrame, setShowFrame] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [iframeUrl, setIframeUrl] = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(
-        "https://hackai.service-now.com/api/snc/candyauthenticator",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie:
-              "BIGipServerpool_hackai=c4a53b71e722863906d11e0d6380e527; JSESSIONID=C6E94718F99E49F0FD32C9F243D0F038; glide_node_id_for_js=bc3e6ce5848075e1326798b0a2a05f7cb0f8e60809cf43ad618319fb4009edab; glide_user_route=glide.f0de4775f7e89ad60bb51e4d6c3d0ba6",
-          },
-          body: JSON.stringify({
-            email: email,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("API request failed");
-      }
-
-      const data = await response.json();
-      const sysId = data.result?.sys_id;
-
-      if (sysId) {
-        const updatedUrl = `https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/${sysId}`;
-        setIframeUrl(updatedUrl);
-        setShowFrame(true);
-        setErrorMessage("");
-        startPolling(email);
-      } else {
-        setErrorMessage("Failed to connect. Please try again.");
-        setShowFrame(false);
-      }
-    } catch (error) {
-      console.error("API error:", error);
-      setErrorMessage("Failed to connect. Please try again.");
-      setShowFrame(false);
-    }
-  };
-
-  const [polling, setPolling] = useState(false);
-  const [scoreFound, setScoreFound] = useState(false);
-
-  const startPolling = (email) => {
-    setPolling(true);
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const pollResponse = await fetch(
-          `https://hackai.service-now.com/api/snc/candyauthenticator?email=${encodeURIComponent(
-            email
-          )}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Cookie:
-                "BIGipServerpool_hackai=c4a53b71e722863906d11e0d6380e527; JSESSIONID=C6E94718F99E49F0FD32C9F243D0F038; glide_node_id_for_js=bc3e6ce5848075e1326798b0a2a05f7cb0f8e60809cf43ad618319fb4009edab; glide_user_route=glide.f0de4775f7e89ad60bb51e4d6c3d0ba6",
-            },
-          }
-        );
-
-        if (!pollResponse.ok) {
-          throw new Error("Polling API request failed");
-        }
-
-        const pollData = await pollResponse.json();
-        const newScore = pollData.result?.score;
-
-        if (newScore && newScore !== "") {
-          clearInterval(pollInterval);
-          setScoreFound(true);
-          setShowFrame(true);
-          setScore(newScore)
-          handleWinDrop(newScore)
-          console.log("Score received:", score);
-        }
-      } catch (error) {
-        console.error("Polling error:", error);
-        clearInterval(pollInterval);
-        setErrorMessage("Polling failed. Try again.");
-      }
-    }, 3000); // Poll every 3 seconds
   };
 
   const handleRefillCompartment = (type: CandyTypeEnum) => {
@@ -468,6 +403,98 @@ const CandyMachine = () => {
     }, 200);
   };
 
+  const [email, setEmail] = useState("");
+  const [showFrame, setShowFrame] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [iframeUrl, setIframeUrl] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(
+        "https://hackai.service-now.com/api/snc/candyauthenticator",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie:
+              "BIGipServerpool_hackai=c4a53b71e722863906d11e0d6380e527; JSESSIONID=C6E94718F99E49F0FD32C9F243D0F038; glide_node_id_for_js=bc3e6ce5848075e1326798b0a2a05f7cb0f8e60809cf43ad618319fb4009edab; glide_user_route=glide.f0de4775f7e89ad60bb51e4d6c3d0ba6",
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("API request failed");
+      }
+
+      const data = await response.json();
+      const sysId = data.result?.sys_id;
+
+      if (sysId) {
+        const updatedUrl = `https://hackai.service-now.com/now/candy_dispenser/user-details/user_details/${sysId}`;
+        setIframeUrl(updatedUrl);
+        setShowFrame(true);
+        setErrorMessage("");
+        startPolling(email);
+      } else {
+        setErrorMessage("Failed to connect. Please try again.");
+        setShowFrame(false);
+      }
+    } catch (error) {
+      console.error("API error:", error);
+      setErrorMessage("Failed to connect. Please try again.");
+      setShowFrame(false);
+    }
+  };
+
+  const [polling, setPolling] = useState(false);
+  const [scoreFound, setScoreFound] = useState(false);
+
+  const startPolling = (email) => {
+    setPolling(true);
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const pollResponse = await fetch(
+          `https://hackai.service-now.com/api/snc/candyauthenticator?email=${encodeURIComponent(
+            email
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie:
+                "BIGipServerpool_hackai=c4a53b71e722863906d11e0d6380e527; JSESSIONID=C6E94718F99E49F0FD32C9F243D0F038; glide_node_id_for_js=bc3e6ce5848075e1326798b0a2a05f7cb0f8e60809cf43ad618319fb4009edab; glide_user_route=glide.f0de4775f7e89ad60bb51e4d6c3d0ba6",
+            },
+          }
+        );
+
+        if (!pollResponse.ok) {
+          throw new Error("Polling API request failed");
+        }
+
+        const pollData = await pollResponse.json();
+        const newScore = pollData.result?.score;
+
+        if (newScore && newScore !== "") {
+          clearInterval(pollInterval);
+          setScoreFound(true);
+          setShowFrame(true);
+          setScore(newScore)
+          handleWinDrop(newScore)
+          console.log("Score received:", score);
+        }
+      } catch (error) {
+        console.error("Polling error:", error);
+        clearInterval(pollInterval);
+        setErrorMessage("Polling failed. Try again.");
+      }
+    }, 3000); // Poll every 3 seconds
+  };
+
   const handleEatCandy = (id: string) => {
     const eatenCandy = collectedCandies.find(candy => candy.id === id);
 
@@ -501,174 +528,6 @@ const CandyMachine = () => {
             transformStyle: "preserve-3d"
           }}
         >
-          <div className="absolute top-4 right-4 z-30">
-            <Sheet>
-              <SheetTrigger asChild>
-                <button className="bg-gray-700 hover:bg-gray-800 text-white p-2 rounded-full shadow-lg transition-all">
-                  <Menu size={20} />
-                </button>
-              </SheetTrigger>
-              <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle className="text-center text-xl font-bold">Stock Management</SheetTitle>
-                  <SheetDescription className="text-center">
-                    Monitor and manage inventory levels
-                  </SheetDescription>
-                </SheetHeader>
-
-                <div className="py-6">
-                  <Tabs defaultValue="machine" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="machine" className="flex items-center gap-2">
-                        <Store size={16} />
-                        <span>Machine Stock</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="floor" className="flex items-center gap-2">
-                        <User size={16} />
-                        <span>Floor Stock</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="vendor" className="flex items-center gap-2">
-                        <Truck size={16} />
-                        <span>Vendor Stock</span>
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="machine" className="space-y-4 mt-4">
-                      <div className="bg-gray-100 p-4 rounded-lg">
-                        <h3 className="font-semibold text-lg mb-4">Vending Machine Inventory</h3>
-                        <div className="space-y-3">
-                          {Object.entries(stockLevels.vendingMachine).map(([type, count]) => (
-                            <div key={`machine-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-8 flex items-center justify-center">
-                                  <Candy
-                                    candy={{ id: `stock-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0 }}
-                                    onEat={() => { }}
-                                    isDisplayOnly={true}
-                                    containerWidth={50}
-                                    containerHeight={30}
-                                  />
-                                </div>
-                                <span className="font-medium">{CANDY_DETAILS[type as CandyTypeEnum].name}</span>
-                              </div>
-                              <div className="flex items-center">
-                                <span className={`px-3 py-1 rounded ${count < 3 ? 'bg-red-100 text-red-800' : count < 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                  {count}/{CANDY_DETAILS[type as CandyTypeEnum].defaultCount}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="floor" className="space-y-4 mt-4">
-                      <div className="bg-gray-100 p-4 rounded-lg">
-                        <h3 className="font-semibold text-lg mb-4">Floor Manager Inventory</h3>
-                        <div className="space-y-3">
-                          {Object.entries(stockLevels.floorManager).map(([type, count]) => (
-                            <div key={`floor-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-8 flex items-center justify-center">
-                                  <Candy
-                                    candy={{ id: `floor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0 }}
-                                    onEat={() => { }}
-                                    isDisplayOnly={true}
-                                    containerWidth={50}
-                                    containerHeight={30}
-                                  />
-                                </div>
-                                <span className="font-medium">{CANDY_DETAILS[type as CandyTypeEnum].name}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`px-3 py-1 rounded ${count < 5 ? 'bg-red-100 text-red-800' : count < 10 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                  {count}
-                                </span>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <button className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-xs rounded">
-                                      Request
-                                    </button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Request Stock from Vendor</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        How many {CANDY_DETAILS[type as CandyTypeEnum].name} would you like to request?
-                                        <Input
-                                          type="number"
-                                          min="1"
-                                          max="20"
-                                          defaultValue="10"
-                                          className="mt-2"
-                                          id={`request-${type}`}
-                                        />
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => {
-                                        const input = document.getElementById(`request-${type}`) as HTMLInputElement;
-                                        const amount = parseInt(input.value);
-                                        if (!isNaN(amount) && amount > 0) {
-                                          handleVendorRefill(type as CandyTypeEnum, amount);
-                                        }
-                                      }}>Request</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="vendor" className="space-y-4 mt-4">
-                      <div className="bg-gray-100 p-4 rounded-lg">
-                        <h3 className="font-semibold text-lg mb-4">Vendor Warehouse Inventory</h3>
-                        <div className="space-y-3">
-                          {Object.entries(stockLevels.vendor).map(([type, count]) => (
-                            <div key={`vendor-${type}`} className="flex items-center justify-between p-2 bg-white rounded-md shadow-sm">
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-8 flex items-center justify-center">
-                                  <Candy
-                                    candy={{ id: `vendor-${type}`, type: type as CandyTypeEnum, x: 0, y: 0, rotation: 0 }}
-                                    onEat={() => { }}
-                                    isDisplayOnly={true}
-                                    containerWidth={50}
-                                    containerHeight={30}
-                                  />
-                                </div>
-                                <span className="font-medium">{CANDY_DETAILS[type as CandyTypeEnum].name}</span>
-                              </div>
-                              <div className="flex items-center">
-                                <span className={`px-3 py-1 rounded ${count < 20 ? 'bg-red-100 text-red-800' : count < 30 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                  {count}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-
-                <SheetFooter>
-                  <SheetClose asChild>
-                    <Button
-                      className="w-full"
-                      onClick={() => { }}
-                    >
-                      Close
-                    </Button>
-                  </SheetClose>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-          </div>
-
           <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 rounded-t-md border-b-4 border-gray-600">
             <h1 className="text-3xl md:text-4xl font-bold text-center text-white drop-shadow-md tracking-wider">CANDY HUB</h1>
             <p className="text-sm text-center text-gray-100">Premium Candy Vending</p>
@@ -704,40 +563,6 @@ const CandyMachine = () => {
                       </div>
                     ))}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
-                        <RefreshCw size={12} />
-                        Refill
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Refill 5 Star Compartment</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Enter the number of candies to add:
-                          <Input
-                            type="number"
-                            min="1"
-                            max="10"
-                            className="mt-2"
-                            value={refillCount}
-                            onChange={(e) => setRefillCount(Number(e.target.value))}
-                          />
-                          <div className="mt-2 text-sm">
-                            Current: {candyCounts.fivestar} / {CANDY_DETAILS.fivestar.defaultCount}
-                          </div>
-                          <div className="mt-1 text-sm">
-                            Floor Stock: {stockLevels.floorManager.fivestar}
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRefillCompartment('fivestar')}>Refill</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
 
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
@@ -757,40 +582,6 @@ const CandyMachine = () => {
                       </div>
                     ))}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
-                        <RefreshCw size={12} />
-                        Refill
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Refill Milkybar Compartment</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Enter the number of candies to add:
-                          <Input
-                            type="number"
-                            min="1"
-                            max="10"
-                            className="mt-2"
-                            value={refillCount}
-                            onChange={(e) => setRefillCount(Number(e.target.value))}
-                          />
-                          <div className="mt-2 text-sm">
-                            Current: {candyCounts.milkybar} / {CANDY_DETAILS.milkybar.defaultCount}
-                          </div>
-                          <div className="mt-1 text-sm">
-                            Floor Stock: {stockLevels.floorManager.milkybar}
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRefillCompartment('milkybar')}>Refill</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
 
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
@@ -810,40 +601,6 @@ const CandyMachine = () => {
                       </div>
                     ))}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
-                        <RefreshCw size={12} />
-                        Refill
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Refill Dairy Milk Compartment</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Enter the number of candies to add:
-                          <Input
-                            type="number"
-                            min="1"
-                            max="10"
-                            className="mt-2"
-                            value={refillCount}
-                            onChange={(e) => setRefillCount(Number(e.target.value))}
-                          />
-                          <div className="mt-2 text-sm">
-                            Current: {candyCounts.dairymilk} / {CANDY_DETAILS.dairymilk.defaultCount}
-                          </div>
-                          <div className="mt-1 text-sm">
-                            Floor Stock: {stockLevels.floorManager.dairymilk}
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRefillCompartment('dairymilk')}>Refill</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               </div>
             </div>
@@ -927,40 +684,6 @@ const CandyMachine = () => {
                       </div>
                     ))}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
-                        <RefreshCw size={12} />
-                        Refill
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Refill Eclairs Compartment</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Enter the number of candies to add:
-                          <Input
-                            type="number"
-                            min="1"
-                            max="10"
-                            className="mt-2"
-                            value={refillCount}
-                            onChange={(e) => setRefillCount(Number(e.target.value))}
-                          />
-                          <div className="mt-2 text-sm">
-                            Current: {candyCounts.eclairs} / {CANDY_DETAILS.eclairs.defaultCount}
-                          </div>
-                          <div className="mt-1 text-sm">
-                            Floor Stock: {stockLevels.floorManager.eclairs}
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRefillCompartment('eclairs')}>Refill</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
 
                 <div className="candy-compartment relative bg-black bg-opacity-5 rounded p-2 border border-gray-300">
@@ -980,40 +703,6 @@ const CandyMachine = () => {
                       </div>
                     ))}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="absolute right-2 bottom-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-md">
-                        <RefreshCw size={12} />
-                        Refill
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Refill Ferrero Rocher Compartment</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Enter the number of candies to add:
-                          <Input
-                            type="number"
-                            min="1"
-                            max="10"
-                            className="mt-2"
-                            value={refillCount}
-                            onChange={(e) => setRefillCount(Number(e.target.value))}
-                          />
-                          <div className="mt-2 text-sm">
-                            Current: {candyCounts.ferrero} / {CANDY_DETAILS.ferrero.defaultCount}
-                          </div>
-                          <div className="mt-1 text-sm">
-                            Floor Stock: {stockLevels.floorManager.ferrero}
-                          </div>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleRefillCompartment('ferrero')}>Refill</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               </div>
             </div>
