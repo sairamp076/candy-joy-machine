@@ -15,7 +15,8 @@ import {
   CANDY_DETAILS,
   createEclairsCandy,
   calculateTotalScore,
-  getMachineStock,
+  getCompleteStock,
+  getMachineStockForFloor,
   updateMachineStock
 } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
@@ -53,6 +54,7 @@ const CandyMachine = () => {
   const [isDispensing, setIsDispensing] = useState<boolean>(false);
   const [selectedFloor, setSelectedFloor] = useState<string>("2");
   const [isLoadingStock, setIsLoadingStock] = useState<boolean>(false);
+  const [completeStockData, setCompleteStockData] = useState(null);
 
   const displayWindowRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
@@ -60,39 +62,55 @@ const CandyMachine = () => {
   const scoreInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    initializeCandies();
-    fetchMachineStock();
-  }, [selectedFloor]);
+    fetchStockData();
+  }, []);
 
-  const fetchMachineStock = async () => {
+  useEffect(() => {
+    if (completeStockData) {
+      updateMachineDisplay();
+    }
+  }, [selectedFloor, completeStockData]);
+
+  const fetchStockData = async () => {
     setIsLoadingStock(true);
     try {
-      const floor = parseInt(selectedFloor, 10);
-      const stockCount = await getMachineStock(floor);
-      
-      setCandyCounts(prev => ({
-        ...prev,
-        eclairs: stockCount
-      }));
+      const stockData = await getCompleteStock();
+      setCompleteStockData(stockData);
 
-      setDisplayCandies(prev => ({
-        ...prev,
-        eclairs: generateDisplayCandies(stockCount, 'eclairs')
-      }));
-
-      toast("Eclairs Stock Refreshed", {
-        description: `Current stock: ${stockCount}`,
-        icon: <CandyIcon className="h-4 w-4" />,
-      });
+      if (stockData) {
+        // Update UI with the stock data
+        updateMachineDisplay();
+      } else {
+        toast.error("Failed to fetch stock data");
+      }
     } catch (error) {
-      console.error("Error fetching machine stock:", error);
-      toast.error("Failed to refresh stock");
+      console.error("Error fetching stock data:", error);
+      toast.error("Failed to fetch stock data");
     } finally {
       setIsLoadingStock(false);
     }
   };
 
+  const updateMachineDisplay = () => {
+    if (!completeStockData) return;
+
+    const floorStock = getMachineStockForFloor(completeStockData, selectedFloor);
+    
+    setCandyCounts(floorStock);
+
+    const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
+      fivestar: generateDisplayCandies(floorStock.fivestar, 'fivestar'),
+      milkybar: generateDisplayCandies(floorStock.milkybar, 'milkybar'),
+      dairymilk: generateDisplayCandies(floorStock.dairymilk, 'dairymilk'),
+      eclairs: generateDisplayCandies(floorStock.eclairs, 'eclairs'),
+      ferrero: generateDisplayCandies(floorStock.ferrero, 'ferrero')
+    };
+
+    setDisplayCandies(newDisplayCandies);
+  };
+
   const initializeCandies = () => {
+    // This will be called if we don't have complete stock data yet
     const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
       fivestar: generateDisplayCandies(candyCounts.fivestar, 'fivestar'),
       milkybar: generateDisplayCandies(candyCounts.milkybar, 'milkybar'),
@@ -122,6 +140,7 @@ const CandyMachine = () => {
       eclairs: generateDisplayCandies(newEclairsCount, 'eclairs')
     }));
 
+    // We still use the old API for updates since the new endpoint is read-only
     const floor = parseInt(selectedFloor, 10);
     await updateMachineStock(floor, newEclairsCount);
 
@@ -136,93 +155,6 @@ const CandyMachine = () => {
 
       setIsDispensing(false);
     }, 300);
-  };
-
-  const handleCollectAll = () => {
-    if (collectedCandies.length === 0) return;
-
-    const now = new Date();
-
-    collectedCandies.forEach(candy => {
-      const candyScore = CANDY_DETAILS[candy.type].baseScore;
-
-      const historyItem: HistoryItem = {
-        id: candy.id,
-        type: candy.type,
-        timestamp: now,
-        score: candyScore
-      };
-
-      setHistory(prev => [historyItem, ...prev]);
-    });
-
-    toast.success(`Collected ${collectedCandies.length} candies!`);
-
-    setCollectedCandies([]);
-  };
-
-  const handleWinDrop = (score) => {
-    console.log("handling win drop"+score);
-    if (isDispensing) return;
-
-    const userScore = Number(score);
-    if (isNaN(userScore) || userScore <= 0) {
-      toast.error("Sorry Better Luck Next Time!");
-      return;
-    }
-
-    setIsDispensing(true);
-    playSound('button');
-
-    const candyCount = getCandyCountForScore(userScore);
-    const trayWidth = trayRef.current?.offsetWidth || 300;
-    const trayHeight = trayRef.current?.offsetHeight || 120;
-
-    let droppedCount = 0;
-    let remainingTypes: CandyTypeEnum[] = (Object.keys(candyCounts) as CandyTypeEnum[]).filter(
-      type => candyCounts[type] > 0
-    );
-
-    if (remainingTypes.length === 0) {
-      setIsDispensing(false);
-      toast.error("No candies left to dispense!");
-      return;
-    }
-
-    toast.success(`Dropping ${candyCount} candies based on score: ${userScore}!`);
-
-    const dropInterval = setInterval(() => {
-      if (droppedCount >= candyCount || remainingTypes.length === 0) {
-        clearInterval(dropInterval);
-        setIsDispensing(false);
-        return;
-      }
-
-      const randomTypeIndex = Math.floor(Math.random() * remainingTypes.length);
-      const selectedType = remainingTypes[randomTypeIndex];
-
-      if (candyCounts[selectedType] <= 0) {
-        remainingTypes = remainingTypes.filter(type => type !== selectedType);
-        return;
-      }
-
-      setCandyCounts(prev => ({
-        ...prev,
-        [selectedType]: prev[selectedType] - 1
-      }));
-
-      setDisplayCandies(prev => ({
-        ...prev,
-        [selectedType]: generateDisplayCandies(candyCounts[selectedType] - 1, selectedType)
-      }));
-
-      const newCandy = createCandy(selectedType, trayWidth - 40, trayHeight / 2 - 20);
-
-      setCollectedCandies(prev => [...prev, newCandy]);
-      playSound('drop');
-
-      droppedCount++;
-    }, 200);
   };
 
   const [email, setEmail] = useState("");
@@ -317,6 +249,70 @@ const CandyMachine = () => {
     }, 3000); // Poll every 3 seconds
   };
 
+  const handleWinDrop = (score) => {
+    console.log("handling win drop"+score);
+    if (isDispensing) return;
+
+    const userScore = Number(score);
+    if (isNaN(userScore) || userScore <= 0) {
+      toast.error("Sorry Better Luck Next Time!");
+      return;
+    }
+
+    setIsDispensing(true);
+    playSound('button');
+
+    const candyCount = getCandyCountForScore(userScore);
+    const trayWidth = trayRef.current?.offsetWidth || 300;
+    const trayHeight = trayRef.current?.offsetHeight || 120;
+
+    let droppedCount = 0;
+    let remainingTypes: CandyTypeEnum[] = (Object.keys(candyCounts) as CandyTypeEnum[]).filter(
+      type => candyCounts[type] > 0
+    );
+
+    if (remainingTypes.length === 0) {
+      setIsDispensing(false);
+      toast.error("No candies left to dispense!");
+      return;
+    }
+
+    toast.success(`Dropping ${candyCount} candies based on score: ${userScore}!`);
+
+    const dropInterval = setInterval(() => {
+      if (droppedCount >= candyCount || remainingTypes.length === 0) {
+        clearInterval(dropInterval);
+        setIsDispensing(false);
+        return;
+      }
+
+      const randomTypeIndex = Math.floor(Math.random() * remainingTypes.length);
+      const selectedType = remainingTypes[randomTypeIndex];
+
+      if (candyCounts[selectedType] <= 0) {
+        remainingTypes = remainingTypes.filter(type => type !== selectedType);
+        return;
+      }
+
+      setCandyCounts(prev => ({
+        ...prev,
+        [selectedType]: prev[selectedType] - 1
+      }));
+
+      setDisplayCandies(prev => ({
+        ...prev,
+        [selectedType]: generateDisplayCandies(candyCounts[selectedType] - 1, selectedType)
+      }));
+
+      const newCandy = createCandy(selectedType, trayWidth - 40, trayHeight / 2 - 20);
+
+      setCollectedCandies(prev => [...prev, newCandy]);
+      playSound('drop');
+
+      droppedCount++;
+    }, 200);
+  };
+
   const handleEatCandy = (id: string) => {
     const eatenCandy = collectedCandies.find(candy => candy.id === id);
 
@@ -353,7 +349,7 @@ const CandyMachine = () => {
             </SelectContent>
           </Select>
           <button 
-            onClick={fetchMachineStock} 
+            onClick={fetchStockData} 
             className="ml-2 p-1.5 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
             disabled={isLoadingStock}
           >
@@ -449,6 +445,7 @@ const CandyMachine = () => {
                 </div>
               </div>
             </div>
+            
             <div className="relative mx-auto w-full h-80 bg-gray-900 rounded-xl shadow-2xl overflow-hidden border-8 border-gray-700 transform perspective-1000 rotate-x-6 rotate-y-2">
               <div className="absolute inset-0 bg-gradient-to-b from-gray-700 via-gray-800 to-black opacity-80 pointer-events-none rounded-xl"></div>
               <div className="absolute inset-1 bg-black rounded-lg border-2 border-gray-600 shadow-inner"></div>
@@ -609,8 +606,8 @@ const CandyMachine = () => {
             </div>
 
             <div className="absolute left-0 right-0 top-0 bottom-0 pointer-events-none">
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-400 to-transparent opacity-30"></div>
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-400 to-transparent opacity-30"></div>
+              <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-gray-400 to-transparent opacity-30"></div>
+              <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-400 to-transparent opacity-30"></div>
               <div className="absolute left-8 right-8 top-0 h-8 bg-gradient-to-b from-gray-400 to-transparent opacity-30"></div>
               <div className="absolute left-8 right-8 bottom-0 h-8 bg-gradient-to-t from-gray-400 to-transparent opacity-30"></div>
             </div>

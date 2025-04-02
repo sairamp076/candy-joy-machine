@@ -138,7 +138,90 @@ export const calculateTotalScore = (history: HistoryItem[]): number => {
 };
 
 /**
- * API functions for machine stock
+ * API types for complete stock information
+ */
+export interface StockItem {
+  dairy_milk_stock: string;
+  eclairs_stock: string;
+  ferro_rocher_stock: string;
+  five_star_stock: string;
+  floor_number: string;
+  milky_bar_stock: string;
+}
+
+export interface VendorStockItem {
+  five_star_stock: string;
+  milky_bar_stock: string;
+  dairy_milk_stock: string;
+  eclairs_stock: string;
+  ferro_rocher_stock: string;
+  vendor_name: string;
+}
+
+export interface CompleteStockResponse {
+  machine_stock: StockItem[];
+  floor_stock: StockItem[];
+  vendor_stock: VendorStockItem[];
+}
+
+/**
+ * Get complete stock information for all floors and vendor
+ */
+export const getCompleteStock = async (): Promise<CompleteStockResponse | null> => {
+  try {
+    const response = await fetch('https://hackai.service-now.com/api/snc/candy_content/get_stock');
+    
+    if (!response.ok) {
+      console.error('Failed to get stock information:', await response.text());
+      return null;
+    }
+    
+    const data: CompleteStockResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching stock information:', error);
+    return null;
+  }
+};
+
+/**
+ * Extract machine stock for a specific floor
+ */
+export const getMachineStockForFloor = (stockData: CompleteStockResponse | null, floorNumber: string): Record<CandyType, number> => {
+  if (!stockData) {
+    return {
+      fivestar: 10,
+      milkybar: 10,
+      dairymilk: 10,
+      eclairs: 10,
+      ferrero: 10
+    };
+  }
+
+  const floorStock = stockData.machine_stock.find(item => item.floor_number === floorNumber);
+  
+  if (!floorStock) {
+    console.error('Could not find stock for floor:', floorNumber);
+    return {
+      fivestar: 10,
+      milkybar: 10,
+      dairymilk: 10,
+      eclairs: 10,
+      ferrero: 10
+    };
+  }
+
+  return {
+    fivestar: parseInt(floorStock.five_star_stock, 10) || 10,
+    milkybar: parseInt(floorStock.milky_bar_stock, 10) || 10,
+    dairymilk: parseInt(floorStock.dairy_milk_stock, 10) || 10,
+    eclairs: parseInt(floorStock.eclairs_stock, 10) || 10,
+    ferrero: parseInt(floorStock.ferro_rocher_stock, 10) || 10
+  };
+};
+
+/**
+ * Legacy API functions for machine stock (kept for backward compatibility)
  */
 export interface MachineStockResponse {
   result: {
