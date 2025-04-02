@@ -257,7 +257,7 @@ export const getMachineStock = async (floor: number): Promise<number> => {
   }
 };
 
-export const updateMachineStock = async (floor: number, eclairsCount: number): Promise<boolean> => {
+export const updateMachineStock = async (floor: number, stockType: string, stockCount: number): Promise<boolean> => {
   try {
     // Ensure floor is within valid range (1-3)
     if (floor < 1 || floor > 3) {
@@ -265,14 +265,16 @@ export const updateMachineStock = async (floor: number, eclairsCount: number): P
       return false;
     }
 
+    const stockPayload: Record<string, number> = {
+      [stockType]: stockCount
+    };
+
     const response = await fetch(`https://hackai.service-now.com/api/snc/candy_content/put_machine_stock?floor=${floor}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        eclairs_stock: eclairsCount
-      })
+      body: JSON.stringify(stockPayload)
     });
     
     if (!response.ok) {
@@ -280,7 +282,7 @@ export const updateMachineStock = async (floor: number, eclairsCount: number): P
       return false;
     }
     
-    console.log('Machine stock updated successfully');
+    console.log(`Machine ${stockType} updated successfully to ${stockCount} on floor ${floor}`);
     return true;
   } catch (error) {
     console.error('Error updating machine stock:', error);

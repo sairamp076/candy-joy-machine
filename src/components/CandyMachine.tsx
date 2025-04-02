@@ -78,7 +78,6 @@ const CandyMachine = () => {
       setCompleteStockData(stockData);
 
       if (stockData) {
-        // Update UI with the stock data
         updateMachineDisplay();
       } else {
         toast.error("Failed to fetch stock data");
@@ -110,7 +109,6 @@ const CandyMachine = () => {
   };
 
   const initializeCandies = () => {
-    // This will be called if we don't have complete stock data yet
     const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
       fivestar: generateDisplayCandies(candyCounts.fivestar, 'fivestar'),
       milkybar: generateDisplayCandies(candyCounts.milkybar, 'milkybar'),
@@ -140,9 +138,8 @@ const CandyMachine = () => {
       eclairs: generateDisplayCandies(newEclairsCount, 'eclairs')
     }));
 
-    // We still use the old API for updates since the new endpoint is read-only
     const floor = parseInt(selectedFloor, 10);
-    await updateMachineStock(floor, newEclairsCount);
+    await updateMachineStock(floor, 'eclairs_stock', newEclairsCount);
 
     setTimeout(() => {
       const trayWidth = trayRef.current?.offsetWidth || 300;
@@ -155,6 +152,30 @@ const CandyMachine = () => {
 
       setIsDispensing(false);
     }, 300);
+  };
+
+  const handleCollectAll = () => {
+    if (collectedCandies.length === 0) return;
+
+    const totalScore = collectedCandies.reduce((total, candy) => {
+      return total + CANDY_DETAILS[candy.type].baseScore;
+    }, 0);
+
+    const collectedItems = [...collectedCandies];
+    
+    collectedItems.forEach(candy => {
+      const historyItem: HistoryItem = {
+        id: candy.id,
+        type: candy.type,
+        timestamp: new Date(),
+        score: CANDY_DETAILS[candy.type].baseScore
+      };
+      setHistory(prev => [historyItem, ...prev]);
+    });
+    
+    setCollectedCandies([]);
+    
+    toast.success(`Collected all candies! +${totalScore} points`);
   };
 
   const [email, setEmail] = useState("");
@@ -294,15 +315,27 @@ const CandyMachine = () => {
         return;
       }
 
+      const newCandyCount = candyCounts[selectedType] - 1;
+      
       setCandyCounts(prev => ({
         ...prev,
-        [selectedType]: prev[selectedType] - 1
+        [selectedType]: newCandyCount
       }));
 
       setDisplayCandies(prev => ({
         ...prev,
-        [selectedType]: generateDisplayCandies(candyCounts[selectedType] - 1, selectedType)
+        [selectedType]: generateDisplayCandies(newCandyCount, selectedType)
       }));
+
+      const apiFieldMapping = {
+        fivestar: 'five_star_stock',
+        milkybar: 'milky_bar_stock',
+        dairymilk: 'dairy_milk_stock',
+        eclairs: 'eclairs_stock',
+        ferrero: 'ferro_rocher_stock'
+      };
+      
+      updateMachineStock(parseInt(selectedFloor, 10), apiFieldMapping[selectedType], newCandyCount);
 
       const newCandy = createCandy(selectedType, trayWidth - 40, trayHeight / 2 - 20);
 
