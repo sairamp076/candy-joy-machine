@@ -290,7 +290,7 @@ export const getMachineStockForFloor = (stockData: CompleteStockResponse | null,
 /**
  * Legacy API functions for machine stock (kept for backward compatibility)
  */
-export interface MachineStockResponse {
+export interface LegacyMachineStockResponse {
   result: {
     quantity: string;
     floor_number: string;
@@ -312,7 +312,7 @@ export const getMachineStock = async (floor: number): Promise<number> => {
       return 0;
     }
     
-    const data: MachineStockResponse = await response.json();
+    const data: LegacyMachineStockResponse = await response.json();
     if (data.result && data.result.length > 0) {
       return parseInt(data.result[0].quantity, 10) || 0;
     }

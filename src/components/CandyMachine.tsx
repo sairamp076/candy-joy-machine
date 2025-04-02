@@ -88,13 +88,11 @@ const CandyMachine = () => {
   const fetchFloorStockData = async () => {
     setIsLoadingStock(true);
     try {
-      // Fetch machine stock using the new API
       const stockData = await getMachineStockForFloorNew(selectedFloor);
       
       if (stockData) {
         setCandyCounts(stockData);
         
-        // Generate display candies based on the returned stock data
         const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
           fivestar: generateDisplayCandies(stockData.fivestar, 'fivestar'),
           milkybar: generateDisplayCandies(stockData.milkybar, 'milkybar'),
@@ -106,13 +104,11 @@ const CandyMachine = () => {
         setDisplayCandies(newDisplayCandies);
       } else {
         toast.error(`Failed to fetch stock data for floor ${selectedFloor}`);
-        // If the API call fails, initialize with default values
         initializeCandies();
       }
     } catch (error) {
       console.error("Error fetching floor stock data:", error);
       toast.error(`Failed to fetch stock data for floor ${selectedFloor}`);
-      // If there's an error, initialize with default values
       initializeCandies();
     } finally {
       setIsLoadingStock(false);
@@ -150,7 +146,6 @@ const CandyMachine = () => {
     }));
 
     const floor = parseInt(selectedFloor, 10);
-    // Use the API_FIELD_MAPPING for the eclairs type
     await updateMachineStock(floor, API_FIELD_MAPPING.eclairs, newEclairsCount);
 
     setTimeout(() => {
@@ -312,39 +307,44 @@ const CandyMachine = () => {
 
     toast.success(`Dropping ${candyCount} candies based on score: ${userScore}!`);
 
+    const updatedCandyCounts = {...candyCounts};
+    
     const dropInterval = setInterval(() => {
       if (droppedCount >= candyCount || remainingTypes.length === 0) {
         clearInterval(dropInterval);
         setIsDispensing(false);
+        
+        const floor = parseInt(selectedFloor, 10);
+        Object.keys(updatedCandyCounts).forEach(type => {
+          const candyType = type as CandyTypeEnum;
+          if (updatedCandyCounts[candyType] !== candyCounts[candyType]) {
+            const apiField = API_FIELD_MAPPING[candyType];
+            updateMachineStock(floor, apiField, updatedCandyCounts[candyType]);
+          }
+        });
+        
         return;
       }
 
       const randomTypeIndex = Math.floor(Math.random() * remainingTypes.length);
       const selectedType = remainingTypes[randomTypeIndex];
 
-      if (candyCounts[selectedType] <= 0) {
+      if (updatedCandyCounts[selectedType] <= 0) {
         remainingTypes = remainingTypes.filter(type => type !== selectedType);
         return;
       }
 
-      const newCandyCount = candyCounts[selectedType] - 1;
+      updatedCandyCounts[selectedType] -= 1;
       
       setCandyCounts(prev => ({
         ...prev,
-        [selectedType]: newCandyCount
+        [selectedType]: updatedCandyCounts[selectedType]
       }));
 
       setDisplayCandies(prev => ({
         ...prev,
-        [selectedType]: generateDisplayCandies(newCandyCount, selectedType)
+        [selectedType]: generateDisplayCandies(updatedCandyCounts[selectedType], selectedType)
       }));
-
-      // Use the API_FIELD_MAPPING for the selected candy type
-      const apiField = API_FIELD_MAPPING[selectedType];
-      
-      // Update the machine stock with the appropriate field and value
-      const floor = parseInt(selectedFloor, 10);
-      updateMachineStock(floor, apiField, newCandyCount);
 
       const newCandy = createCandy(selectedType, trayWidth - 40, trayHeight / 2 - 20);
 
