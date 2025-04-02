@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -19,7 +18,8 @@ import {
   getCompleteStock,
   getMachineStockForFloor,
   updateMachineStock,
-  API_FIELD_MAPPING
+  API_FIELD_MAPPING,
+  getMachineStockForFloorNew
 } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
@@ -68,22 +68,15 @@ const CandyMachine = () => {
   }, []);
 
   useEffect(() => {
-    if (completeStockData) {
-      updateMachineDisplay();
+    if (selectedFloor) {
+      fetchFloorStockData();
     }
-  }, [selectedFloor, completeStockData]);
+  }, [selectedFloor]);
 
   const fetchStockData = async () => {
     setIsLoadingStock(true);
     try {
-      const stockData = await getCompleteStock();
-      setCompleteStockData(stockData);
-
-      if (stockData) {
-        updateMachineDisplay();
-      } else {
-        toast.error("Failed to fetch stock data");
-      }
+      await fetchFloorStockData();
     } catch (error) {
       console.error("Error fetching stock data:", error);
       toast.error("Failed to fetch stock data");
@@ -92,22 +85,38 @@ const CandyMachine = () => {
     }
   };
 
-  const updateMachineDisplay = () => {
-    if (!completeStockData) return;
-
-    const floorStock = getMachineStockForFloor(completeStockData, selectedFloor);
-    
-    setCandyCounts(floorStock);
-
-    const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
-      fivestar: generateDisplayCandies(floorStock.fivestar, 'fivestar'),
-      milkybar: generateDisplayCandies(floorStock.milkybar, 'milkybar'),
-      dairymilk: generateDisplayCandies(floorStock.dairymilk, 'dairymilk'),
-      eclairs: generateDisplayCandies(floorStock.eclairs, 'eclairs'),
-      ferrero: generateDisplayCandies(floorStock.ferrero, 'ferrero')
-    };
-
-    setDisplayCandies(newDisplayCandies);
+  const fetchFloorStockData = async () => {
+    setIsLoadingStock(true);
+    try {
+      // Fetch machine stock using the new API
+      const stockData = await getMachineStockForFloorNew(selectedFloor);
+      
+      if (stockData) {
+        setCandyCounts(stockData);
+        
+        // Generate display candies based on the returned stock data
+        const newDisplayCandies: Record<CandyTypeEnum, CandyType[]> = {
+          fivestar: generateDisplayCandies(stockData.fivestar, 'fivestar'),
+          milkybar: generateDisplayCandies(stockData.milkybar, 'milkybar'),
+          dairymilk: generateDisplayCandies(stockData.dairymilk, 'dairymilk'),
+          eclairs: generateDisplayCandies(stockData.eclairs, 'eclairs'),
+          ferrero: generateDisplayCandies(stockData.ferrero, 'ferrero')
+        };
+        
+        setDisplayCandies(newDisplayCandies);
+      } else {
+        toast.error(`Failed to fetch stock data for floor ${selectedFloor}`);
+        // If the API call fails, initialize with default values
+        initializeCandies();
+      }
+    } catch (error) {
+      console.error("Error fetching floor stock data:", error);
+      toast.error(`Failed to fetch stock data for floor ${selectedFloor}`);
+      // If there's an error, initialize with default values
+      initializeCandies();
+    } finally {
+      setIsLoadingStock(false);
+    }
   };
 
   const initializeCandies = () => {

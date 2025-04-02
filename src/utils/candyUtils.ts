@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Cookie, Gift, Candy, IceCream2, Coffee } from 'lucide-react';
 
@@ -36,6 +35,15 @@ export const API_FIELD_MAPPING: Record<CandyType, string> = {
   dairymilk: 'dairy_milk_stock',
   eclairs: 'eclairs_stock',
   ferrero: 'ferro_rocher_stock'
+};
+
+// Mapping for the new machine stock API response fields
+export const MACHINE_STOCK_FIELD_MAPPING: Record<CandyType, string> = {
+  fivestar: 'five_star_quantity',
+  milkybar: 'milky_bar_quantity',
+  dairymilk: 'dairy_milk_quantity',
+  eclairs: 'eclairs_quantity',
+  ferrero: 'ferro_rocher_quantity'
 };
 
 /**
@@ -172,6 +180,56 @@ export interface CompleteStockResponse {
   floor_stock: StockItem[];
   vendor_stock: VendorStockItem[];
 }
+
+/**
+ * New API response type for machine stock
+ */
+export interface MachineStockItem {
+  eclairs_quantity: string;
+  dairy_milk_quantity: string;
+  milky_bar_quantity: string;
+  five_star_quantity: string;
+  ferro_rocher_quantity: string;
+  floor_number: string;
+}
+
+export interface MachineStockResponse {
+  result: MachineStockItem[];
+}
+
+/**
+ * Get machine stock information for a specific floor
+ */
+export const getMachineStockForFloorNew = async (floorNumber: string | number): Promise<Record<CandyType, number> | null> => {
+  try {
+    const response = await fetch(`https://hackai.service-now.com/api/snc/candy_content/get_machine_stock?floor=${floorNumber}`);
+    
+    if (!response.ok) {
+      console.error('Failed to get machine stock information:', await response.text());
+      return null;
+    }
+    
+    const data: MachineStockResponse = await response.json();
+    
+    if (!data.result || data.result.length === 0) {
+      console.error('No machine stock data found for floor:', floorNumber);
+      return null;
+    }
+    
+    const floorStock = data.result[0];
+    
+    return {
+      fivestar: parseInt(floorStock.five_star_quantity, 10) || 10,
+      milkybar: parseInt(floorStock.milky_bar_quantity, 10) || 10,
+      dairymilk: parseInt(floorStock.dairy_milk_quantity, 10) || 10,
+      eclairs: parseInt(floorStock.eclairs_quantity, 10) || 10,
+      ferrero: parseInt(floorStock.ferro_rocher_quantity, 10) || 10
+    };
+  } catch (error) {
+    console.error('Error fetching machine stock information:', error);
+    return null;
+  }
+};
 
 /**
  * Get complete stock information for all floors and vendor
