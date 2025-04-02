@@ -29,6 +29,15 @@ export const CANDY_DETAILS: Record<CandyType, { name: string; baseScore: number;
   ferrero: { name: 'Ferrero Rocher', baseScore: 25, defaultCount: 10 }
 };
 
+// API field mapping for candy types
+export const API_FIELD_MAPPING: Record<CandyType, string> = {
+  fivestar: 'five_star_stock',
+  milkybar: 'milky_bar_stock',
+  dairymilk: 'dairy_milk_stock',
+  eclairs: 'eclairs_stock',
+  ferrero: 'ferro_rocher_stock'
+};
+
 /**
  * Creates a new candy object with random position within the bounds
  */

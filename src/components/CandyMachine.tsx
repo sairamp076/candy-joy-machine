@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
@@ -17,7 +18,8 @@ import {
   calculateTotalScore,
   getCompleteStock,
   getMachineStockForFloor,
-  updateMachineStock
+  updateMachineStock,
+  API_FIELD_MAPPING
 } from '@/utils/candyUtils';
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
@@ -139,7 +141,8 @@ const CandyMachine = () => {
     }));
 
     const floor = parseInt(selectedFloor, 10);
-    await updateMachineStock(floor, 'eclairs_stock', newEclairsCount);
+    // Use the API_FIELD_MAPPING for the eclairs type
+    await updateMachineStock(floor, API_FIELD_MAPPING.eclairs, newEclairsCount);
 
     setTimeout(() => {
       const trayWidth = trayRef.current?.offsetWidth || 300;
@@ -327,15 +330,12 @@ const CandyMachine = () => {
         [selectedType]: generateDisplayCandies(newCandyCount, selectedType)
       }));
 
-      const apiFieldMapping = {
-        fivestar: 'five_star_stock',
-        milkybar: 'milky_bar_stock',
-        dairymilk: 'dairy_milk_stock',
-        eclairs: 'eclairs_stock',
-        ferrero: 'ferro_rocher_stock'
-      };
+      // Use the API_FIELD_MAPPING for the selected candy type
+      const apiField = API_FIELD_MAPPING[selectedType];
       
-      updateMachineStock(parseInt(selectedFloor, 10), apiFieldMapping[selectedType], newCandyCount);
+      // Update the machine stock with the appropriate field and value
+      const floor = parseInt(selectedFloor, 10);
+      updateMachineStock(floor, apiField, newCandyCount);
 
       const newCandy = createCandy(selectedType, trayWidth - 40, trayHeight / 2 - 20);
 
